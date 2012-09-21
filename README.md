@@ -46,7 +46,7 @@ ColorHack may be temporarily added to web pages for which the source cannot be m
     ch.src = 'http://zhihaojia.com/shared/colorhack.js';
     document.head.appendChild(ch);
 
-Note that ColorHack will not remain on the page if it is refreshed.
+Note that this may need to be repeated if the page is reloaded.
 
 Configuration:
 --------------
