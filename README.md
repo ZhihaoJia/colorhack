@@ -3,7 +3,7 @@ ColorHack
 
 GUI for dynamically changing HTML element colors and developing color schemes. Useful for the quick designing and prototyping of web pages.
 
-**NOTE**: ColorHack is a work-in-progress and many of the expected features are not implemented yet.
+**NOTE**: ColorHack is a work in progress and many of the expected features are not implemented yet.
 
 Usage:
 ------
@@ -59,6 +59,6 @@ For example, the UI provided by ColorHack is done through adding new elements to
 Notes:
 ------
 
-ColorHack makes changes to HTML pages by changing the styling of specific elements on the page through JavaScript. Thus, ColorHack will not work if JavaScript is disabled in the browser.
-
-In addition, ColorHack will have no effect on page elements styled using `!important` rules.
+- ColorHack should only work properly on modern browsers that support HTML5 and CSS3.
+- ColorHack makes changes to HTML pages by changing the styling of specific elements on the page through JavaScript. Thus, ColorHack will not work if JavaScript is disabled in the browser.
+- ColorHack will have no effect on page elements styled using `!important` rules.
