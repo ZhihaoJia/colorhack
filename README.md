@@ -1,9 +1,9 @@
 ColorHack
 =========
 
-GUI for dynamically changing HTML element colors and developing color schemes. Useful for the quick designing and prototyping of web pages.
+GUI for dynamically changing HTML element colors and developing color schemes from within the browser. Useful for quickly designing and prototyping web pages.
 
-**NOTE**: ColorHack is a work in progress and many of the expected features are not implemented yet.
+**NOTE**: ColorHack is a work in progress and many of the expected features are not implemented yet. Furthermore, many of the implemented features may not work properly on all pages and browsers.
 
 Usage:
 ------
@@ -53,12 +53,12 @@ Configuration:
 
 The top of colorhack.js contains global variables used to configure various aspects of ColorHack. These may be changed to suit the circumstance.
 
-For example, the UI provided by ColorHack is done through adding new elements to the page. In the unlikely case that any element attributes (such as `id` or `class`) conflict with those on the page, they may be changed by modifying the values of certain global variables.
+For example, the UI provided by ColorHack is created through adding new elements to the page. In the unlikely case that any ColorHack element attributes (such as `id` or `class`) conflict with those on the page, they may be changed by modifying the values of the appropriate global variables.
 
 
 Notes:
 ------
 
-- ColorHack should only work properly on modern browsers that support HTML5 and CSS3.
+- ColorHack should only work properly on modern browsers that support HTML5 and CSS3. The page `!DOCTYPE` should also be for HTML5.
 - ColorHack makes changes to HTML pages by changing the styling of specific elements on the page through JavaScript. Thus, ColorHack will not work if JavaScript is disabled in the browser.
 - ColorHack will have no effect on page elements styled using `!important` rules.
