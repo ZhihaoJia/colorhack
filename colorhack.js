@@ -392,7 +392,10 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'color-schemes, ',
         '#' + CH_PREFIX + 'color-settings, ',
         '#' + CH_PREFIX + 'element-details {',
-        '    position:               fixed;',
+        // Position is !important to overwrite jQuery inline style of position: relative for Chrome.
+        // Possible a bug in jq (checks for other position styling, so should not overwrite it).
+        // Have not been able to isolate exact cause in jq, and have not been able to reproduce issue in simpler test cases.
+        '    position:               fixed !important;',
 
         '    -ms-user-select:        none;',
         '    -moz-user-select:       none;',
@@ -408,11 +411,11 @@ function LoadStylesheet() {
         '    background:             rgb(240, 240, 240);', // won't be applied if browser supports CSS3
         '    cursor:                 pointer;',
 
-        '    background:         -ms-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
-        '    background:         -moz-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
-        '    background:         -webkit-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
-        '    background:         -o-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
-        '    background:         linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
+        '    background:            -ms-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
+        '    background:            -moz-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
+        '    background:            -webkit-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
+        '    background:            -o-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
+        '    background:            linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
         '}',
 
         // Menu
