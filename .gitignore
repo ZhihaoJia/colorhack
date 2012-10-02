@@ -1,3 +1,4 @@
 *.swp
 *.html
 *-min.js
+*.min.js
