@@ -3,8 +3,17 @@
 /*  GLOBAL VARIABLES */
 
 // Modify these values to resolve conflicts with the page's elements.
-var CH_PREFIX =     'colorhack_';   // HTML id prefix for naming ColorHack elements
-var CH_CLASS =      'colorhack';    // HTML class to identify ColorHack elements
+var CH_PREFIX =                     'colorhack_';   // HTML id prefix for naming ColorHack elements
+var CH_CLASS =                      'colorhack';    // HTML class to identify ColorHack elements
+
+var BASE_Z_INDEX =                  9000;           // minimum z-index of ColorHack elements 
+
+var DIALOG_COLOR_SCHEMES_HEIGHT =   400;            // color-schemes dialog height
+var DIALOG_COLOR_SCHEMES_WIDTH =    200;            // color-schemes dialog width
+var DIALOG_COLOR_SETTINGS_HEIGHT =  200;            // color-settings dialog height
+var DIALOG_COLOR_SETTINGS_WIDTH =   400;            // color-settings dialog width
+var DIALOG_ELEMENT_DETAILS_HEIGHT = 300;            // element-details dialog height
+var DIALOG_ELEMENT_DETAILS_WIDTH =  300;            // element-details dialog width
 
 // ColorHack "class".
 // Contains properties and methods for ColorHack objects.
@@ -114,10 +123,19 @@ function ColorHack() {
             )
             // Allow dialog to be dragged.
             .draggable({
-                //cancel:         '.' + CH_CLASS + ':not(.' + CH_PREFIX + 'dialog-header)',
                 //containment:    'body',
                 scroll:         false,
-                zIndex:         10000
+                zIndex:         10000,
+                handle:         '.' + CH_PREFIX + 'dialog-header',
+                /* 
+                 * There seems to be an issue with jQuery UI draggable containment option and fixed position elements:
+                 * http://bugs.jqueryui.com/ticket/6181
+                 * Seems like the issue still exists for integer array values.
+                 */
+                containment:    (function() {
+                                    var $window = $(window);
+                                    return [0, 0, $window.width() - DIALOG_COLOR_SCHEMES_WIDTH, $window.height() - DIALOG_COLOR_SCHEMES_HEIGHT]
+                                })()
             })
         ,
 
@@ -136,7 +154,12 @@ function ColorHack() {
             // Allow dialog to be dragged.
             .draggable({
                 scroll:         false,
-                zIndex:         10000
+                zIndex:         10000,
+                handle:         '.' + CH_PREFIX + 'dialog-header',
+                containment:    (function() {
+                                    var $window = $(window);
+                                    return [0, 0, $window.width() - DIALOG_COLOR_SETTINGS_WIDTH, $window.height() - DIALOG_COLOR_SETTINGS_HEIGHT]
+                                })()
             })
         ,
 
@@ -155,7 +178,12 @@ function ColorHack() {
             // Allow dialog to be dragged
             .draggable({
                 scroll:         false,
-                zIndex:         10000
+                zIndex:         10000,
+                handle:         '.' + CH_PREFIX + 'dialog-header',
+                containment:    (function() {
+                                    var $window = $(window);
+                                    return [0, 0, $window.width() - DIALOG_ELEMENT_DETAILS_WIDTH, $window.height() - DIALOG_ELEMENT_DETAILS_HEIGHT]
+                                })()
             })
     };
 
@@ -393,7 +421,7 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'color-settings, ',
         '#' + CH_PREFIX + 'element-details {',
         // Position is !important to overwrite jQuery inline style of position: relative for Chrome.
-        // Possible a bug in jq (checks for other position styling, so should not overwrite it).
+        // Possibly a bug in jQuery UI (checks for other position styling, so should not overwrite it).
         // Have not been able to isolate exact cause in jq, and have not been able to reproduce issue in simpler test cases.
         '    position:               fixed !important;',
 
@@ -407,20 +435,20 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header, ',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header, ',
         '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header {',
-        '    color:                  rgb(80, 80, 80);',
+        '    color:                  rgb(60, 60, 60);',
         '    background:             rgb(240, 240, 240);', // won't be applied if browser supports CSS3
         '    cursor:                 pointer;',
 
-        '    background:            -ms-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
-        '    background:            -moz-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
-        '    background:            -webkit-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
-        '    background:            -o-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
-        '    background:            linear-gradient(top, rgb(250, 250, 250) 0%, rgb(220, 220, 220) 100%);',
+        '    background:            -ms-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
+        '    background:            -moz-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
+        '    background:            -webkit-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
+        '    background:            -o-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
+        '    background:            linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
         '}',
 
         // Menu
         '#' + CH_PREFIX + 'menu {',
-        '    z-index:                9010;',
+        '    z-index:                ' + BASE_Z_INDEX + 10 + ';',
         '    bottom:                 0;',
         '    right:                  0;',
         '    margin:                 4px;',
@@ -433,7 +461,7 @@ function LoadStylesheet() {
         '    width:                  150px;',
 
         '    opacity:                0.6;',
-        '    border:                 2px solid rgb(80, 80, 80);',
+        '    border:                 2px solid rgb(60, 60, 60);',
         '}',
         '#' + CH_PREFIX + 'icon {',
         '    padding:                4px 0;',
@@ -447,8 +475,8 @@ function LoadStylesheet() {
         '    padding:                4px;',
 
         '    color:                  rgb(240, 240, 240);',
-        '    background:             rgb(120, 120, 120);',
-        '    border-top:             1px solid rgb(180, 180, 180);',
+        '    background:             rgb(100, 100, 100);',
+        '    border-top:             1px solid rgb(160, 160, 160);',
 
         '    cursor:                 pointer;',
         '}',
@@ -456,7 +484,7 @@ function LoadStylesheet() {
         '    border-top:             0;',
         '}',
         '#' + CH_PREFIX + 'toolbar .' + CH_PREFIX + 'toolbar-item:hover {',
-        '    background:             rgb(80, 80, 80);',
+        '    background:             rgb(60, 60, 60);',
         '}',
         '#' + CH_PREFIX + 'toolbar .' + CH_PREFIX + 'toolbar-item .' + CH_PREFIX + 'toolbar-item-check {',
         '    width:                  16px;',
@@ -467,12 +495,12 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'color-schemes, ',
         '#' + CH_PREFIX + 'color-settings, ',
         '#' + CH_PREFIX + 'element-details {',
-        '    z-index:                9001;',
+        '    z-index:                ' + BASE_Z_INDEX + 1 + ';',
 
         '    opacity:                0.6;',
         '    color:                  rgb(240, 240, 240);',
-        '    background:             rgb(80, 80, 80);',
-        '    border:                 2px solid rgb(80, 80, 80);',
+        '    background:             rgb(60, 60, 60);',
+        '    border:                 2px solid rgb(60, 60, 60);',
 
         '    font-size:              12px;',
         '}',
@@ -516,24 +544,24 @@ function LoadStylesheet() {
 
         // Color scheme dialog
         '#' + CH_PREFIX + 'color-schemes {',
-        '    height:                 400px;',
-        '    width:                  200px;',
+        '    height:                 ' + DIALOG_COLOR_SCHEMES_HEIGHT + 'px;',
+        '    width:                  ' + DIALOG_COLOR_SCHEMES_WIDTH + 'px;',
         '    top:                    4px;',
         '    left:                   4px;',
         '}',
 
         // Color settings dialog
         '#' + CH_PREFIX + 'color-settings {',
-        '    height:                 200px;',
-        '    width:                  400px;',
+        '    height:                 ' + DIALOG_COLOR_SETTINGS_HEIGHT + 'px;',
+        '    width:                  ' + DIALOG_COLOR_SETTINGS_WIDTH + 'px;',
         '    top:                    4px;',
         '    right:                  4px;',
         '}',
 
         // Element details dialog
         '#' + CH_PREFIX + 'element-details {',
-        '    height:                 300px;',
-        '    width:                  300px;',
+        '    height:                 ' + DIALOG_ELEMENT_DETAILS_HEIGHT + 'px;',
+        '    width:                  ' + DIALOG_ELEMENT_DETAILS_WIDTH + 'px;',
         '    bottom:                 4px;',
         '    left:                   4px;',
         '}'
