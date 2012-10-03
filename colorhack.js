@@ -52,120 +52,118 @@ function ColorHack() {
         ;
         return header;
     }
-    
-    // Primary components used by ColorHack.
-    this.components = {
-        // Menu located on the bottom-right of the page.
-        // Contains the icon and toolbar components.
-        menu:
-            $('<div/>', {
-                id:         CH_PREFIX + 'menu',
-                'class':    CH_CLASS
-            })
-        ,
 
-        // Menu icon located on the bottom-right of the page.
-        // Toggles visibility of the toolbar.
-        icon:
-            $('<h1/>', {
-                id:         CH_PREFIX + 'icon',
-                'class':    CH_CLASS
-            })
-            .text('ColorHack')
-        ,
+    // Menu located on the bottom-right of the page.
+    // Contains the icon and toolbar components.
+    var _menu = 
+        $('<div/>', {
+            id:         CH_PREFIX + 'menu',
+            'class':    CH_CLASS
+        })
+    ;
 
-        // Toolbar located on the bottom-right of the page.
-        // Provides a menu to toggle visibility of ColorHack dialogs.
-        toolbar:
-            $('<ul/>', {
-                id:         CH_PREFIX + 'toolbar',
-                'class':    CH_CLASS
-            })
-            // Add toolbar options.
-            .append(
-                // Create toolbar items.
-                (function() {
-                    var toolbarOptions = $(); // empty jQuery object
-                    // Build collection of toolbar options from dialogs array
-                    for (i = 0 ; i < _dialogs.length ; i++) {
-                        toolbarOptions = toolbarOptions.add(
-                            $('<li/>', {
-                                id:         CH_PREFIX + 'toolbar_' + _dialogs[i].id,
-                                'class':    CH_CLASS + ' ' +
-                                            CH_PREFIX + 'toolbar-item'
+    // Menu icon located on the bottom-right of the page.
+    // Toggles visibility of the toolbar.
+    var _icon = 
+        $('<h1/>', {
+            id:         CH_PREFIX + 'icon',
+            'class':    CH_CLASS
+        })
+        .text('ColorHack')
+    ;
+
+    // Toolbar located on the bottom-right of the page.
+    // Provides a menu to toggle visibility of ColorHack dialogs.
+    var _toolbar = 
+        $('<ul/>', {
+            id:         CH_PREFIX + 'toolbar',
+            'class':    CH_CLASS
+        })
+        // Add toolbar options.
+        .append(
+            // Create toolbar items.
+            (function() {
+                var toolbarOptions = $(); // empty jQuery object
+                // Build collection of toolbar options from dialogs array
+                for (i = 0 ; i < _dialogs.length ; i++) {
+                    toolbarOptions = toolbarOptions.add(
+                        $('<li/>', {
+                            id:         CH_PREFIX + 'toolbar_' + _dialogs[i].id,
+                            'class':    CH_CLASS + ' ' +
+                                        CH_PREFIX + 'toolbar-item'
+                        })
+                        .append( // checkmark element
+                            $('<span/>', {
+                                'class':    CH_CLASS + ' ' + CH_PREFIX + 'toolbar-item-check'
                             })
-                            .append( // checkmark element
-                                $('<span/>', {
-                                    'class':    CH_CLASS + ' ' + CH_PREFIX + 'toolbar-item-check'
-                                })
-                                .html('&#x2713') // checkmark
-                            )
-                            .append(_dialogs[i].text)
-                        );
-                    }
-                    return toolbarOptions;
-                })()
-            )
-            .hide()
-        ,
+                            .html('&#x2713') // checkmark
+                        )
+                        .append(_dialogs[i].text)
+                    );
+                }
+                return toolbarOptions;
+            })()
+        )
+        .hide()
+    ;
 
-        // Color scheme dialog.
-        // Manages color rules and elements that use the rules.
-        'color-schemes':
-            $('<div/>', {
-                id:         CH_PREFIX + 'color-schemes',
-                'class':    CH_CLASS + ' ' +
-                            CH_PREFIX + 'dialog'
-            })
-            // Add dialog header.
-            .append(
-                _CreateDialogHeader('Color Schemes')
-            )
-            // Allow dialog to be dragged.
-            .draggable({
-                //containment:    'body',
-                scroll:         false,
-                zIndex:         10000,
-                handle:         '.' + CH_PREFIX + 'dialog-header',
-                /* 
-                 * There seems to be an issue with jQuery UI draggable containment option and fixed position elements:
-                 * http://bugs.jqueryui.com/ticket/6181
-                 * Seems like the issue still exists for integer array values.
-                 */
-                containment:    (function() {
-                                    var $window = $(window);
-                                    return [0, 0, $window.width() - DIALOG_COLOR_SCHEMES_WIDTH, $window.height() - DIALOG_COLOR_SCHEMES_HEIGHT]
-                                })()
-            })
-        ,
+    // Color scheme dialog.
+    // Manages color rules and elements that use the rules.
+    var _colorSchemes = 
+        $('<div/>', {
+            id:         CH_PREFIX + 'color-schemes',
+            'class':    CH_CLASS + ' ' +
+                        CH_PREFIX + 'dialog'
+        })
+        // Add dialog header.
+        .append(
+            _CreateDialogHeader('Color Schemes')
+        )
+        // Allow dialog to be dragged.
+        .draggable({
+            //containment:    'body',
+            scroll:         false,
+            zIndex:         BASE_Z_INDEX + 100,
+            handle:         '.' + CH_PREFIX + 'dialog-header',
+            /* 
+             * There seems to be an issue with jQuery UI draggable containment option and fixed position elements:
+             * http://bugs.jqueryui.com/ticket/6181
+             * Seems like the issue still exists for integer array values.
+             */
+            containment:    (function() {
+                                var $window = $(window);
+                                return [0, 0, $window.width() - DIALOG_COLOR_SCHEMES_WIDTH, $window.height() - DIALOG_COLOR_SCHEMES_HEIGHT]
+                            })()
+        })
+    ;
 
-        // Color settings dialog.
-        // Manages the set of color styles in a color rule.
-        'color-settings':
-            $('<div/>', {
-                id:         CH_PREFIX + 'color-settings',
-                'class':    CH_CLASS + ' ' +
-                            CH_PREFIX + 'dialog'
-            })
-            // Add dialog header.
-            .append(
-                _CreateDialogHeader('Color Settings')
-            )
-            // Allow dialog to be dragged.
-            .draggable({
-                scroll:         false,
-                zIndex:         10000,
-                handle:         '.' + CH_PREFIX + 'dialog-header',
-                containment:    (function() {
-                                    var $window = $(window);
-                                    return [0, 0, $window.width() - DIALOG_COLOR_SETTINGS_WIDTH, $window.height() - DIALOG_COLOR_SETTINGS_HEIGHT]
-                                })()
-            })
-        ,
+    // Color settings dialog.
+    // Manages the set of color styles in a color rule.
+    var _colorSettings = 
+        $('<div/>', {
+            id:         CH_PREFIX + 'color-settings',
+            'class':    CH_CLASS + ' ' +
+                        CH_PREFIX + 'dialog'
+        })
+        // Add dialog header.
+        .append(
+            _CreateDialogHeader('Color Settings')
+        )
+        // Allow dialog to be dragged.
+        .draggable({
+            scroll:         false,
+            zIndex:         BASE_Z_INDEX + 100,
+            handle:         '.' + CH_PREFIX + 'dialog-header',
+            containment:    (function() {
+                                var $window = $(window);
+                                return [0, 0, $window.width() - DIALOG_COLOR_SETTINGS_WIDTH, $window.height() - DIALOG_COLOR_SETTINGS_HEIGHT]
+                            })()
+        })
+    ;
 
-        // Element details dialog.
-        // Shows details on element attributes and applied color rules.
-        'element-details':
+    // Element details dialog.
+    // Shows details on element attributes and applied color rules.
+    var _elementDetails = 
             $('<div/>', {
                 id:         CH_PREFIX + 'element-details',
                 'class':    CH_CLASS + ' ' +
@@ -178,13 +176,23 @@ function ColorHack() {
             // Allow dialog to be dragged
             .draggable({
                 scroll:         false,
-                zIndex:         10000,
+                zIndex:         BASE_Z_INDEX + 100,
                 handle:         '.' + CH_PREFIX + 'dialog-header',
                 containment:    (function() {
                                     var $window = $(window);
                                     return [0, 0, $window.width() - DIALOG_ELEMENT_DETAILS_WIDTH, $window.height() - DIALOG_ELEMENT_DETAILS_HEIGHT]
                                 })()
             })
+    ;
+    
+    // Primary components used by ColorHack.
+    this.components = {
+        menu:               _menu,
+        icon:               _icon,
+        toolbar:            _toolbar,
+        'color-schemes':    _colorSchemes,
+        'color-settings':   _colorSettings,
+        'element-details':  _elementDetails
     };
 
 }
@@ -448,7 +456,7 @@ function LoadStylesheet() {
 
         // Menu
         '#' + CH_PREFIX + 'menu {',
-        '    z-index:                ' + BASE_Z_INDEX + 10 + ';',
+        '    z-index:                ' + (BASE_Z_INDEX + 10) + ';',
         '    bottom:                 0;',
         '    right:                  0;',
         '    margin:                 4px;',
@@ -495,7 +503,7 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'color-schemes, ',
         '#' + CH_PREFIX + 'color-settings, ',
         '#' + CH_PREFIX + 'element-details {',
-        '    z-index:                ' + BASE_Z_INDEX + 1 + ';',
+        '    z-index:                ' + (BASE_Z_INDEX + 1) + ';',
 
         '    opacity:                0.6;',
         '    color:                  rgb(240, 240, 240);',
