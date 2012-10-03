@@ -1,6 +1,8 @@
-/* ======== ColorHack ======== */
-
-/*  GLOBAL VARIABLES */
+/*
+ ================================
+         GLOBAL VARIABLES
+ ================================
+ */
 
 // Modify these values to resolve conflicts with the page's elements.
 var CH_PREFIX =                     'colorhack_';   // HTML id prefix for naming ColorHack elements
@@ -15,22 +17,25 @@ var DIALOG_COLOR_SETTINGS_WIDTH =   400;            // color-settings dialog wid
 var DIALOG_ELEMENT_DETAILS_HEIGHT = 300;            // element-details dialog height
 var DIALOG_ELEMENT_DETAILS_WIDTH =  300;            // element-details dialog width
 
-// ColorHack "class".
-// Contains properties and methods for ColorHack objects.
-// Any page should only have one instance of the ColorHack class.
+/*
+ ================================
+         COLORHACK CLASS
+ ================================
+
+ Contains properties and methods for ColorHack objects.
+ Any page should only have one instance of the ColorHack class.
+ */
 function ColorHack() {
 
-    // Dialogs that make up the main UI.
-    // Used to generate the menu toolbar options.
-    var _dialogs = [
-        { id: 'color-schemes',          text: 'Color Scheme' },
-        { id: 'color-settings',         text: 'Color Settings' },
-        { id: 'element-details',        text: 'Element Details' }
-    ];
+    /*
+     ================================
+              PRIVATE METHODS
+     ================================
+     */
 
     // Creates dialog header elements.
     var _CreateDialogHeader = function(title) {
-        var header = 
+        var header =
             $('<h2/>', {
                 'class':    CH_CLASS + ' ' +
                             CH_PREFIX + 'dialog-header'
@@ -53,9 +58,29 @@ function ColorHack() {
         return header;
     }
 
+    /*
+     ================================
+            PRIVATE PROPERTIES
+     ================================
+     */
+
+    // Dialogs that make up the main UI.
+    // Used to generate the menu toolbar options.
+    var _dialogs = [
+        { id: 'color-schemes',          text: 'Color Scheme' },
+        { id: 'color-settings',         text: 'Color Settings' },
+        { id: 'element-details',        text: 'Element Details' }
+    ];
+
+    /*
+     --------------------------------
+                   MENU
+     --------------------------------
+     */
+
     // Menu located on the bottom-right of the page.
     // Contains the icon and toolbar components.
-    var _menu = 
+    var _menu =
         $('<div/>', {
             id:         CH_PREFIX + 'menu',
             'class':    CH_CLASS
@@ -64,7 +89,7 @@ function ColorHack() {
 
     // Menu icon located on the bottom-right of the page.
     // Toggles visibility of the toolbar.
-    var _icon = 
+    var _icon =
         $('<h1/>', {
             id:         CH_PREFIX + 'icon',
             'class':    CH_CLASS
@@ -74,7 +99,7 @@ function ColorHack() {
 
     // Toolbar located on the bottom-right of the page.
     // Provides a menu to toggle visibility of ColorHack dialogs.
-    var _toolbar = 
+    var _toolbar =
         $('<ul/>', {
             id:         CH_PREFIX + 'toolbar',
             'class':    CH_CLASS
@@ -107,9 +132,15 @@ function ColorHack() {
         .hide()
     ;
 
+    /*
+     --------------------------------
+           COLOR SCHEMES DIALOG
+     --------------------------------
+     */
+
     // Color scheme dialog.
     // Manages color rules and elements that use the rules.
-    var _colorSchemes = 
+    var _colorSchemes =
         $('<div/>', {
             id:         CH_PREFIX + 'color-schemes',
             'class':    CH_CLASS + ' ' +
@@ -137,9 +168,15 @@ function ColorHack() {
         })
     ;
 
+    /*
+     --------------------------------
+           COLOR SETTINGS DIALOG
+     --------------------------------
+     */
+
     // Color settings dialog.
     // Manages the set of color styles in a color rule.
-    var _colorSettings = 
+    var _colorSettings =
         $('<div/>', {
             id:         CH_PREFIX + 'color-settings',
             'class':    CH_CLASS + ' ' +
@@ -161,9 +198,15 @@ function ColorHack() {
         })
     ;
 
+    /*
+     --------------------------------
+          ELEMENT DETAILS DIALOG
+     --------------------------------
+     */
+
     // Element details dialog.
     // Shows details on element attributes and applied color rules.
-    var _elementDetails = 
+    var _elementDetails =
             $('<div/>', {
                 id:         CH_PREFIX + 'element-details',
                 'class':    CH_CLASS + ' ' +
@@ -184,6 +227,12 @@ function ColorHack() {
                                 })()
             })
     ;
+
+    /*
+     ================================
+            PUBLIC PROPERTIES
+     ================================
+     */
     
     // Primary components used by ColorHack.
     this.components = {
@@ -195,89 +244,94 @@ function ColorHack() {
         'element-details':  _elementDetails
     };
 
-}
+    /*
+     ================================
+            PUBLIC PROPERTIES
+     ================================
+     */
 
-// Builds the DOM for ColorHack elements.
-ColorHack.prototype.AssembleComponents = function() {
-    $(document.body)
-        // Build bottom-right menu and add it to page
-        .append(this.components.menu
-            .append(this.components.toolbar)
-            .append(this.components.icon)
-            .appendTo(document.body)
-        )
-        // Add dialogs to page
-        .append(this.components['color-schemes'])
-        .append(this.components['color-settings'])
-        .append(this.components['element-details'])
-    ;
-}
+    // Builds the DOM for ColorHack elements.
+    this.AssembleComponents = function() {
+        $(document.body)
+            // Build bottom-right menu and add it to page
+            .append(this.components.menu
+                .append(this.components.toolbar)
+                .append(this.components.icon)
+                .appendTo(document.body)
+            )
+            // Add dialogs to page
+            .append(this.components['color-schemes'])
+            .append(this.components['color-settings'])
+            .append(this.components['element-details'])
+        ;
+    }
 
-// Creates and attaches events for ColorHack elements.
-ColorHack.prototype.AttachEvents = function() {
-    // Menu events
-    this.components.menu
-        // Hovering over the menu should change the opacity of child elements.
-        // I don't remember why I decided not to do this with the :hover pseudoclass...
-        .hover(function() {
-            $(this).children('#' + CH_PREFIX + 'icon, #' + CH_PREFIX + 'toolbar').css({
-                opacity:    '1'
-            });
-        }, function() {
-            $(this).children('#' + CH_PREFIX + 'icon, #' + CH_PREFIX + 'toolbar').css({
-                opacity:    '0.6'
-            });
+    // Creates and attaches events for ColorHack elements.
+    this.AttachEvents = function() {
+        // Menu events
+        this.components.menu
+            // Hovering over the menu should change the opacity of child elements.
+            // I don't remember why I decided not to do this with the :hover pseudoclass...
+            .hover(function() {
+                $(this).children('#' + CH_PREFIX + 'icon, #' + CH_PREFIX + 'toolbar').css({
+                    opacity:    '1'
+                });
+            }, function() {
+                $(this).children('#' + CH_PREFIX + 'icon, #' + CH_PREFIX + 'toolbar').css({
+                    opacity:    '0.6'
+                });
+            })
+
+        // Icon events
+        this.components.icon
+            // Clicking the menu icon should toggle visibility of the toolbar.
+            .click(function() {
+                var $toolbar = $('#' + CH_PREFIX + 'toolbar')
+                if ($toolbar.css('display') === 'none') {
+                    $toolbar.show('slide', { direction: 'down' }, 300);
+                } else {
+                    $toolbar.hide('slide', { direction: 'down' }, 300);
+                }
+            })
+
+        // Toolbar option events
+        this.components.toolbar.find('.' + CH_PREFIX + 'toolbar-item').each(function(index, value) {
+            // Iterate through toolbar options and assign events to each.
+            // Clicking a toolbar option should toggle the visibility of the coresponding dialog.
+            // A checkmark should also be in the toolbar option to indicate whether the dialog is visible.
+            $(value).click(function() {
+                var $checkbox = $(this).find('.' + CH_PREFIX + 'toolbar-item-check');
+                if ($checkbox.html() === '') {
+                    // Add checkmark
+                    $checkbox.html('&#x2713'); // checkmark
+                    // Show corresponding dialog
+                    $('#' + this.id.replace('toolbar_', '')).show();
+                } else {
+                    // Remove checkmark
+                    $checkbox.html('');
+                    // Hide corresponding dialog
+                    $('#' + this.id.replace('toolbar_', '')).hide();
+                }
+            })
         })
 
-    // Icon events
-    this.components.icon
-        // Clicking the menu icon should toggle visibility of the toolbar.
-        .click(function() {
-            var $toolbar = $('#' + CH_PREFIX + 'toolbar')
-            if ($toolbar.css('display') === 'none') {
-                $toolbar.show('slide', { direction: 'down' }, 300);
-            } else {
-                $toolbar.hide('slide', { direction: 'down' }, 300);
-            }
-        })
+        // Dialog events
+        $('.' + CH_PREFIX + 'dialog-close').click(function() {
+            var $dialog = $(this).closest('.' + CH_PREFIX + 'dialog');
+            // Hide dialog
+            $dialog.hide();
+            // Remove check from menu toolbar option
+            $('#' + $dialog.get(0).id.replace(CH_PREFIX, CH_PREFIX + 'toolbar_'))
+                .find('.' + CH_PREFIX + 'toolbar-item-check')
+                .html('');
+        });
+    }
 
-    // Toolbar option events
-    this.components.toolbar.find('.' + CH_PREFIX + 'toolbar-item').each(function(index, value) {
-        // Iterate through toolbar options and assign events to each.
-        // Clicking a toolbar option should toggle the visibility of the coresponding dialog.
-        // A checkmark should also be in the toolbar option to indicate whether the dialog is visible.
-        $(value).click(function() {
-            var $checkbox = $(this).find('.' + CH_PREFIX + 'toolbar-item-check');
-            if ($checkbox.html() === '') {
-                // Add checkmark
-                $checkbox.html('&#x2713'); // checkmark
-                // Show corresponding dialog
-                $('#' + this.id.replace('toolbar_', '')).show();
-            } else {
-                // Remove checkmark
-                $checkbox.html('');
-                // Hide corresponding dialog
-                $('#' + this.id.replace('toolbar_', '')).hide();
-            }
-        })
-    })
-
-    // Dialog events
-    $('.' + CH_PREFIX + 'dialog-close').click(function() {
-        var $dialog = $(this).closest('.' + CH_PREFIX + 'dialog');
-        // Hide dialog
-        $dialog.hide();
-        // Remove check from menu toolbar option
-        $('#' + $dialog.get(0).id.replace(CH_PREFIX, CH_PREFIX + 'toolbar_'))
-            .find('.' + CH_PREFIX + 'toolbar-item-check')
-            .html('');
-    });
-}
-
-// Sets up ColorHack on the page.
-ColorHack.prototype.Init = function() {
-    this.AssembleComponents();
-    this.AttachEvents();
+    // Sets up ColorHack on the page.
+    this.Init = function() {
+        this.AssembleComponents();
+        this.AttachEvents();
+    }
 }
 
 /*
