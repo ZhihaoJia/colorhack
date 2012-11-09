@@ -17,13 +17,16 @@ var DIALOG_COLOR_SETTINGS_WIDTH =   400;            // color-settings dialog wid
 var DIALOG_ELEMENT_DETAILS_HEIGHT = 300;            // element-details dialog height
 var DIALOG_ELEMENT_DETAILS_WIDTH =  300;            // element-details dialog width
 
+// ColorHack object
+var COLORHACK;
+
 /*
  ================================
          COLORHACK CLASS
  ================================
 
- Contains properties and methods for ColorHack objects.
- Any page should only have one instance of the ColorHack class.
+ * Contains properties and methods for ColorHack objects.
+ * Any page should only have one instance of the ColorHack class.
  */
 function ColorHack() {
 
@@ -67,9 +70,9 @@ function ColorHack() {
     // Dialogs that make up the main UI.
     // Used to generate the menu toolbar options.
     var _dialogs = [
-        { id: 'color-schemes',          text: 'Color Scheme' },
-        { id: 'color-settings',         text: 'Color Settings' },
-        { id: 'element-details',        text: 'Element Details' }
+        { id: 'color-schemes',          name: 'Color Schemes' },
+        { id: 'color-settings',         name: 'Color Settings' },
+        { id: 'element-details',        name: 'Element Details' }
     ];
 
     /*
@@ -119,11 +122,12 @@ function ColorHack() {
                         })
                         .append( // checkmark element
                             $('<span/>', {
-                                'class':    CH_CLASS + ' ' + CH_PREFIX + 'toolbar-item-check'
+                                'class':    CH_CLASS + ' ' +
+                                            CH_PREFIX + 'toolbar-item-check'
                             })
                             .html('&#x2713') // checkmark
                         )
-                        .append(_dialogs[i].text)
+                        .append(_dialogs[i].name)
                     );
                 }
                 return toolbarOptions;
@@ -198,6 +202,53 @@ function ColorHack() {
         })
     ;
 
+    // Color picker component of color settings dialog.
+    // Uses sliders to control R, G, B, and A levels.
+    // Also contains text fields for manually entering values.
+    var _colorSettingsColors =
+        $('<div/>', {
+            id:         CH_PREFIX + 'color-settings_colors',
+            'class':    CH_CLASS,
+        })
+        .append(
+            $('<div/>', {
+                id:         CH_PREFIX + 'color-settings_color-red',
+                'class':    CH_CLASS + ' ' +
+                            CH_PREFIX + 'color-settings_color',
+            })
+            .append(
+                $('<canvas/>', {
+                    id:         CH_PREFIX + 'color-settings_color-picker-red',
+                    'class':    CH_CLASS + ' ' +
+                                CH_PREFIX + 'color-picker',
+                    height:     '25px',
+                    width:      '256px'
+                })
+                .append(
+                    $('<p/>').html('Your browser does not support this feature')
+                )
+            )
+            .append(
+                $('<input/>', {
+                    id:         CH_PREFIX + 'color-settings_color-textbox-red',
+                    'class':    CH_CLASS + ' ' +
+                                CH_PREFIX + 'color-textbox',
+                    name:       'color-textbox-red',
+                    type:       'text',
+                })
+            )
+            .append(
+                $('<label/>', {
+                    id:         CH_PREFIX + 'color-settings_color-label-red',
+                    'class':    CH_CLASS + ' ' +
+                                CH_PREFIX + 'color-label',
+                    'for':      'color-textbox-red'
+                })
+            )
+        )
+        .appendTo(_colorSettings)
+    ;
+
     /*
      --------------------------------
           ELEMENT DETAILS DIALOG
@@ -246,7 +297,7 @@ function ColorHack() {
 
     /*
      ================================
-            PUBLIC PROPERTIES
+              PUBLIC METHODS
      ================================
      */
 
@@ -286,7 +337,7 @@ function ColorHack() {
         this.components.icon
             // Clicking the menu icon should toggle visibility of the toolbar.
             .click(function() {
-                var $toolbar = $('#' + CH_PREFIX + 'toolbar')
+                var $toolbar = COLORHACK.components.toolbar;
                 if ($toolbar.css('display') === 'none') {
                     $toolbar.show('slide', { direction: 'down' }, 300);
                 } else {
@@ -305,12 +356,12 @@ function ColorHack() {
                     // Add checkmark
                     $checkbox.html('&#x2713'); // checkmark
                     // Show corresponding dialog
-                    $('#' + this.id.replace('toolbar_', '')).show();
+                    COLORHACK.components[this.id.replace(CH_PREFIX + 'toolbar_', '')].show();
                 } else {
                     // Remove checkmark
                     $checkbox.html('');
                     // Hide corresponding dialog
-                    $('#' + this.id.replace('toolbar_', '')).hide();
+                    COLORHACK.components[this.id.replace(CH_PREFIX + 'toolbar_', '')].hide();
                 }
             })
         })
@@ -450,7 +501,7 @@ function LoadCssReset() {
     $(document.head).append(
         $('<style/>', {
             type: 'text/css'
-        }).html(CSS_RESET.join('\n'))
+        }).html(CSS_RESET.join(' '))
     );
 }
 
@@ -460,172 +511,179 @@ function LoadStylesheet() {
     var STYLESHEET = [
         // General
         '.' + CH_CLASS + ' {',
-        '    font-family:            "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, sans-serif !important;',
+            'font-family:' +            '"HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, sans-serif !important;',
 
-        '    -ms-transition:         color .1s linear, background .1s linear, opacity .2s linear;',
-        '    -moz-transition:        color .1s linear, background .1s linear, opacity .2s linear;',
-        '    -webkit-transition:     color .1s linear, background .1s linear, opacity .2s linear;',
-        '    -o-transition:          color .1s linear, background .1s linear, opacity .2s linear;',
-        '    transition:             color .1s linear, background .1s linear, opacity .2s linear;',
+            '-ms-transition:' +         'color .1s linear, background .1s linear, opacity .2s linear;',
+            '-moz-transition:' +        'color .1s linear, background .1s linear, opacity .2s linear;',
+            '-webkit-transition:' +     'color .1s linear, background .1s linear, opacity .2s linear;',
+            '-o-transition:' +          'color .1s linear, background .1s linear, opacity .2s linear;',
+            'transition:' +             'color .1s linear, background .1s linear, opacity .2s linear;',
         '}',
-        'h1.' + CH_CLASS + ', ',
-        'h2.' + CH_CLASS + ', ',
-        'h3.' + CH_CLASS + ', ',
-        'h4.' + CH_CLASS + ', ',
-        'h5.' + CH_CLASS + ', ',
-        'h6.' + CH_CLASS + '  {',
-        '    font-weight:            bold;',
+        'h1.' + CH_CLASS + ',',
+        'h2.' + CH_CLASS + ',',
+        'h3.' + CH_CLASS + ',',
+        'h4.' + CH_CLASS + ',',
+        'h5.' + CH_CLASS + ',',
+        'h6.' + CH_CLASS + ' {',
+            'font-weight:' +            'bold;',
         '}',
 
         // Menu + dialogs
-        '#' + CH_PREFIX + 'menu, ',
-        '#' + CH_PREFIX + 'color-schemes, ',
-        '#' + CH_PREFIX + 'color-settings, ',
+        '#' + CH_PREFIX + 'menu,',
+        '#' + CH_PREFIX + 'color-schemes,',
+        '#' + CH_PREFIX + 'color-settings,',
         '#' + CH_PREFIX + 'element-details {',
         // Position is !important to overwrite jQuery inline style of position: relative for Chrome.
         // Possibly a bug in jQuery UI (checks for other position styling, so should not overwrite it).
         // Have not been able to isolate exact cause in jq, and have not been able to reproduce issue in simpler test cases.
-        '    position:               fixed !important;',
+            'position:' +               'fixed !important;',
 
-        '    -ms-user-select:        none;',
-        '    -moz-user-select:       none;',
-        '    -webkit-user-select:    none;',
-        '    -o-user-select:         none;',
-        '    user-select:            none;',
+            '-ms-user-select:' +        'none;',
+            '-moz-user-select:' +       'none;',
+            '-webkit-user-select:' +    'none;',
+            '-o-user-select:' +         'none;',
+            'user-select:' +            'none;',
         '}',
-        '#' + CH_PREFIX + 'icon, ',
-        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header, ',
-        '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header, ',
+        '#' + CH_PREFIX + 'icon,',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header,',
+        '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header,',
         '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header {',
-        '    color:                  rgb(60, 60, 60);',
-        '    background:             rgb(240, 240, 240);', // won't be applied if browser supports CSS3
-        '    cursor:                 pointer;',
+            'color:' +              'rgb(60, 60, 60);',
+            'background:' +         'rgb(240, 240, 240);', // won't be applied if browser supports CSS3
+            'cursor:' +             'pointer;',
 
-        '    background:            -ms-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
-        '    background:            -moz-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
-        '    background:            -webkit-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
-        '    background:            -o-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
-        '    background:            linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
+            'background:' +         '-ms-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
+            'background:' +         '-moz-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
+            'background:' +         '-webkit-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
+            'background:' +         '-o-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
+            'background:' +         'linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
         '}',
 
         // Menu
         '#' + CH_PREFIX + 'menu {',
-        '    z-index:                ' + (BASE_Z_INDEX + 10) + ';',
-        '    bottom:                 0;',
-        '    right:                  0;',
-        '    margin:                 4px;',
+            'z-index:' +            (BASE_Z_INDEX + 10) + ';',
+            'bottom:' +             '0;',
+            'right:' +              '0;',
+            'margin:' +             '4px;',
 
-        '    font-size:              16px;',
-        '    text-align:             center;',
+            'font-size:' +          '16px;',
+            'text-align:' +         'center;',
         '}',
-        '#' + CH_PREFIX + 'icon, ',
+        '#' + CH_PREFIX + 'icon,',
         '#' + CH_PREFIX + 'toolbar {',
-        '    width:                  150px;',
+            'width:' +              '150px;',
 
-        '    opacity:                0.6;',
-        '    border:                 2px solid rgb(60, 60, 60);',
+            'opacity:' +            '0.6;',
+            'border:' +             '2px solid rgb(60, 60, 60);',
         '}',
         '#' + CH_PREFIX + 'icon {',
-        '    padding:                4px 0;',
+            'padding:' +            '4px 0;',
         '}',
         '#' + CH_PREFIX + 'toolbar {',
-        '    border-bottom:          0;',
+            'border-bottom:' +      '0;',
 
-        '    text-align:             left;',
+            'text-align:' +         'left;',
         '}',
         '#' + CH_PREFIX + 'toolbar .' + CH_PREFIX + 'toolbar-item {',
-        '    padding:                4px;',
+            'padding:' +            '4px;',
 
-        '    color:                  rgb(240, 240, 240);',
-        '    background:             rgb(100, 100, 100);',
-        '    border-top:             1px solid rgb(160, 160, 160);',
+            'color:' +              'rgb(240, 240, 240);',
+            'background:' +         'rgb(100, 100, 100);',
+            'border-top:' +         '1px solid rgb(160, 160, 160);',
 
-        '    cursor:                 pointer;',
+            'cursor:                 pointer;',
         '}',
         '#' + CH_PREFIX + 'toolbar .' + CH_PREFIX + 'toolbar-item:first-child {',
-        '    border-top:             0;',
+            'border-top:' +         '0;',
         '}',
         '#' + CH_PREFIX + 'toolbar .' + CH_PREFIX + 'toolbar-item:hover {',
-        '    background:             rgb(60, 60, 60);',
+            'background:' +         'rgb(60, 60, 60);',
         '}',
         '#' + CH_PREFIX + 'toolbar .' + CH_PREFIX + 'toolbar-item .' + CH_PREFIX + 'toolbar-item-check {',
-        '    width:                  16px;',
-        '    display:                inline-block;',
+            'width:' +              '16px;',
+            'display:' +            'inline-block;',
         '}',
 
         // Dialogs
-        '#' + CH_PREFIX + 'color-schemes, ',
-        '#' + CH_PREFIX + 'color-settings, ',
+        '#' + CH_PREFIX + 'color-schemes,',
+        '#' + CH_PREFIX + 'color-settings,',
         '#' + CH_PREFIX + 'element-details {',
-        '    z-index:                ' + (BASE_Z_INDEX + 1) + ';',
+            'z-index:' +            (BASE_Z_INDEX + 1) + ';',
 
-        '    opacity:                0.6;',
-        '    color:                  rgb(240, 240, 240);',
-        '    background:             rgb(60, 60, 60);',
-        '    border:                 2px solid rgb(60, 60, 60);',
+            'opacity:' +            '0.6;',
+            'color:' +              'rgb(240, 240, 240);',
+            'background:' +         'rgb(60, 60, 60);',
+            'border:' +             '2px solid rgb(60, 60, 60);',
 
-        '    font-size:              12px;',
+            'font-size:              12px;',
         '}',
         '#' + CH_PREFIX + 'color-schemes:hover, ',
         '#' + CH_PREFIX + 'color-settings:hover, ',
         '#' + CH_PREFIX + 'element-details:hover {',
-        '    opacity:                1;',
+            'opacity:' +            '1;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header, ',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header, ',
         '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header {',
-        '    position:               relative;',
-        '    padding:                4px 0;',
+            'position:' +           'relative;',
+            'padding:' +            '4px 0;',
 
-        '    font-size:              14px;',
-        '    text-align:             center;',
-        '    white-space:            nowrap;',
+            'font-size:' +          '14px;',
+            'text-align:' +         'center;',
+            'white-space:' +        'nowrap;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-title, ',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-title, ',
         '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-title {',
-        '    display:                inline-block;',
+            'display:' +            'inline-block;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close, ',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close, ',
         '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close {',
-        '    position:               absolute;',
-        '    top:                    0;',
-        '    right:                  0;',
-        '    padding:                0 8px 4px 8px;',
+            'position:' +           'absolute;',
+            'top:' +                '0;',
+            'right:' +              '0;',
+            'padding:' +            '0 8px 4px 8px;',
 
-        '    opacity:                0.6;',
+            'opacity:' +            '0.6;',
 
-        '    font-size:              18px;',
+            'font-size:' +          '18px;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close:hover, ',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close:hover, ',
         '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close:hover {',
-        '    opacity:                1;',
+            'opacity:' +            '1;',
         '}',
 
         // Color scheme dialog
         '#' + CH_PREFIX + 'color-schemes {',
-        '    height:                 ' + DIALOG_COLOR_SCHEMES_HEIGHT + 'px;',
-        '    width:                  ' + DIALOG_COLOR_SCHEMES_WIDTH + 'px;',
-        '    top:                    4px;',
-        '    left:                   4px;',
+            'height:' +             DIALOG_COLOR_SCHEMES_HEIGHT + 'px;',
+            'width:' +              DIALOG_COLOR_SCHEMES_WIDTH + 'px;',
+            'top:' +                '4px;',
+            'left:' +               '4px;',
+        '}',
+
+        '#' + CH_PREFIX + 'color-settings_colors {',
+            'height:' +             '120px',
+        '}',
+        '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-settings_color-red {',
+            'height:' +             '30px',
         '}',
 
         // Color settings dialog
         '#' + CH_PREFIX + 'color-settings {',
-        '    height:                 ' + DIALOG_COLOR_SETTINGS_HEIGHT + 'px;',
-        '    width:                  ' + DIALOG_COLOR_SETTINGS_WIDTH + 'px;',
-        '    top:                    4px;',
-        '    right:                  4px;',
+            'height:' +             DIALOG_COLOR_SETTINGS_HEIGHT + 'px;',
+            'width:' +              DIALOG_COLOR_SETTINGS_WIDTH + 'px;',
+            'top:' +                '4px;',
+            'right:' +              '4px;',
         '}',
 
         // Element details dialog
         '#' + CH_PREFIX + 'element-details {',
-        '    height:                 ' + DIALOG_ELEMENT_DETAILS_HEIGHT + 'px;',
-        '    width:                  ' + DIALOG_ELEMENT_DETAILS_WIDTH + 'px;',
-        '    bottom:                 4px;',
-        '    left:                   4px;',
+            'height:' +             DIALOG_ELEMENT_DETAILS_HEIGHT + 'px;',
+            'width:' +              DIALOG_ELEMENT_DETAILS_WIDTH + 'px;',
+            'bottom:' +             '4px;',
+            'left:' +               '4px;',
         '}'
     ]
 
@@ -633,7 +691,7 @@ function LoadStylesheet() {
     $(document.head).append(
         $('<style/>', {
             type: 'text/css'
-        }).html(STYLESHEET.join('\n'))
+        }).html(STYLESHEET.join(' '))
     );
 }
 
@@ -642,6 +700,6 @@ $(function() {
     LoadCssReset();
     LoadStylesheet();
 
-    ch = new ColorHack();
-    ch.Init();
+    COLORHACK = new ColorHack();
+    COLORHACK.Init();
 });
