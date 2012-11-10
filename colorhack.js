@@ -82,8 +82,8 @@ function ColorHack() {
                     id:         CH_PREFIX + 'color-settings_color-picker-' + color,
                     'class':    CH_CLASS + ' ' +
                                 CH_PREFIX + 'color-picker',
-                    'Height':   24, // WARNING: This is a hack, since
-                    'Width':    256 // normally it changes CSS height and width.
+                    'Height':   '24px', // WARNING: This is a hack, since
+                    'Width':    '256px' // normally it changes CSS height and width.
                 })
                 .append(
                     $('<p/>').html('Your browser does not support this feature')
@@ -256,10 +256,10 @@ function ColorHack() {
             _CreateColorPicker('red')
         )
         .append(
-            _CreateColorPicker('blue')
+            _CreateColorPicker('green')
         )
         .append(
-            _CreateColorPicker('green')
+            _CreateColorPicker('blue')
         )
         .append(
             _CreateColorPicker('alpha')
@@ -363,13 +363,13 @@ function ColorHack() {
                     context.fillRect(j * hueWidth, 0, hueWidth, hueHeight);
                 }
             }
-            else if (colors[i] === 'blue') {
+            else if (colors[i] === 'green') {
                 for (j = 0; j < 256; j++) {
                     context.fillStyle = 'rgb(0, ' + j + ', 0)';
                     context.fillRect(j * hueWidth, 0, hueWidth, hueHeight);
                 }
             }
-            else if (colors[i] === 'green') {
+            else if (colors[i] === 'blue') {
                 for (j = 0; j < 256; j++) {
                     context.fillStyle = 'rgb(0, 0, ' + j + ')';
                     context.fillRect(j * hueWidth, 0, hueWidth, hueHeight);
