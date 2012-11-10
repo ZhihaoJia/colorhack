@@ -459,11 +459,32 @@ function ColorHack() {
         });
     }
 
+    this.SetDefaults = function() {
+        // Set default color in color settings to white.
+        this.components['color-settings_colors']
+            .find('.' + CH_PREFIX + 'color-textbox').val(255);
+
+        // Get alpha channel color picker canvas and context.
+        canvas = this.components['color-pickers'].alpha.get(0);
+        if (typeof canvas === 'undefined') return;
+        context = canvas.getContext('2d');
+        if (typeof context === 'undefined') return;
+
+        // Fill color picker with color gradient.
+        var hueWidth = canvas.width / 256;
+        var hueHeight = canvas.height;
+        for (j = 0; j < 256; j++) {
+            context.fillStyle = 'rgba(255, 255, 255, ' + j / 256 + ')';
+            context.fillRect(j * hueWidth, 0, hueWidth, hueHeight);
+        }
+    }
+
     // Sets up ColorHack on the page.
     this.Init = function() {
         this.BuildDialogs();
         this.SetupColorPickers();
         this.AttachEvents();
+        this.SetDefaults();
     }
 }
 
