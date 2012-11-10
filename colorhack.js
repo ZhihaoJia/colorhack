@@ -61,15 +61,16 @@ function ColorHack() {
         return header;
     }
 
+    // Creates color picker elements for a single color.
     var _CreateColorPicker = function(color) {
         var colorPicker =
-            $('<div/>', {
+            $('<div/>', { // container for color picker elements
                 id:         CH_PREFIX + 'color-settings_color-' + color,
                 'class':    CH_CLASS + ' ' +
                             CH_PREFIX + 'color-settings_color',
             })
             .append(
-                $('<label/>', {
+                $('<label/>', { // label for color picker textbox - [R:|G:|B:]
                     id:         CH_PREFIX + 'color-settings_color-label',
                     'class':    CH_CLASS + ' ' +
                                 CH_PREFIX + 'color-label',
@@ -78,7 +79,7 @@ function ColorHack() {
                 .html(color.substring(0, 1).toUpperCase() + ':')
             )
             .append(
-                $('<canvas/>', {
+                $('<canvas/>', { // color picker
                     id:         CH_PREFIX + 'color-settings_color-picker-' + color,
                     'class':    CH_CLASS + ' ' +
                                 CH_PREFIX + 'color-picker',
@@ -90,7 +91,7 @@ function ColorHack() {
                 )
             )
             .append(
-                $('<input/>', {
+                $('<input/>', { // textbox for color picker - numerical value for color intensity
                     id:         CH_PREFIX + 'color-settings_color-textbox-' + color,
                     'class':    CH_CLASS + ' ' +
                                 CH_PREFIX + 'color-textbox',
@@ -343,38 +344,29 @@ function ColorHack() {
 
     // Sets up the color picker components.
     this.SetupColorPickers = function() {
-        var colors = ['red', 'blue', 'green'];
+        var colors = [
+            { name: 'red',      color: '#FF0000' },
+            { name: 'green',    color: '#00FF00' },
+            { name: 'blue',     color: '#0000FF' }
+        ];
         var canvas, context;
+        var linearGradient;
 
         // Set up canvas for R, G, and B color pickers.
         for (i = 0; i < colors.length; i++) {
             // Get color picker canvas and context.
-            canvas = this.components['color-pickers'][colors[i]].get(0);
+            canvas = this.components['color-pickers'][colors[i].name].get(0);
             if (typeof canvas === 'undefined') continue;
             context = canvas.getContext('2d');
             if (typeof context === 'undefined') continue;
 
             // Fill color picker with color gradient.
-            var hueWidth = canvas.width / 256;
-            var hueHeight = canvas.height;
-            if (colors[i] === 'red') {
-                for (j = 0; j < 256; j++) {
-                    context.fillStyle = 'rgb(' + j + ', 0, 0)';
-                    context.fillRect(j * hueWidth, 0, hueWidth, hueHeight);
-                }
-            }
-            else if (colors[i] === 'green') {
-                for (j = 0; j < 256; j++) {
-                    context.fillStyle = 'rgb(0, ' + j + ', 0)';
-                    context.fillRect(j * hueWidth, 0, hueWidth, hueHeight);
-                }
-            }
-            else if (colors[i] === 'blue') {
-                for (j = 0; j < 256; j++) {
-                    context.fillStyle = 'rgb(0, 0, ' + j + ')';
-                    context.fillRect(j * hueWidth, 0, hueWidth, hueHeight);
-                }
-            }
+            linearGradient = context.createLinearGradient(0, 0, canvas.width, 0);
+            linearGradient.addColorStop(0, '#000'); // black
+            linearGradient.addColorStop(1, colors[i].color);
+
+            context.fillStyle = linearGradient;
+            context.fillRect(0, 0, canvas.width, canvas.height);
         }
 
         // Set up canvas for alpha color picker.
@@ -471,12 +463,12 @@ function ColorHack() {
         if (typeof context === 'undefined') return;
 
         // Fill color picker with color gradient.
-        var hueWidth = canvas.width / 256;
-        var hueHeight = canvas.height;
-        for (j = 0; j < 256; j++) {
-            context.fillStyle = 'rgba(255, 255, 255, ' + j / 256 + ')';
-            context.fillRect(j * hueWidth, 0, hueWidth, hueHeight);
-        }
+        linearGradient = context.createLinearGradient(0, 0, canvas.width, 0);
+        linearGradient.addColorStop(0, 'rgba(0, 0, 0, 0)'); // transparent
+        linearGradient.addColorStop(1, '#FFFFFF'); // white
+
+        context.fillStyle = linearGradient;
+        context.fillRect(0, 0, canvas.width, canvas.height);
     }
 
     // Sets up ColorHack on the page.
@@ -787,7 +779,7 @@ function LoadStylesheet() {
             'vertical-align:' +     'top;',
         '}',
         '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-textbox {',
-            'height:' +             '24px;',
+            'height:' +             '16px;',
             'width:' +              '48px;',
             'vertical-align:' +     'top;',
         '}',
