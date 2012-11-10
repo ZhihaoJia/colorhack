@@ -61,6 +61,46 @@ function ColorHack() {
         return header;
     }
 
+    var _CreateColorPicker = function(color) {
+        var colorPicker =
+            $('<div/>', {
+                id:         CH_PREFIX + 'color-settings_color-' + color,
+                'class':    CH_CLASS + ' ' +
+                            CH_PREFIX + 'color-settings_color',
+            })
+            .append(
+                $('<label/>', {
+                    id:         CH_PREFIX + 'color-settings_color-label',
+                    'class':    CH_CLASS + ' ' +
+                                CH_PREFIX + 'color-label',
+                    'for':      CH_PREFIX + 'color-settings_color-textbox-' + color
+                })
+                .html(color.substring(0, 1).toUpperCase() + ':')
+            )
+            .append(
+                $('<canvas/>', {
+                    id:         CH_PREFIX + 'color-settings_color-picker-' + color,
+                    'class':    CH_CLASS + ' ' +
+                                CH_PREFIX + 'color-picker',
+                    'Height':   24, // WARNING: This is a hack, since
+                    'Width':    256 // normally it changes CSS height and width.
+                })
+                .append(
+                    $('<p/>').html('Your browser does not support this feature')
+                )
+            )
+            .append(
+                $('<input/>', {
+                    id:         CH_PREFIX + 'color-settings_color-textbox-' + color,
+                    'class':    CH_CLASS + ' ' +
+                                CH_PREFIX + 'color-textbox',
+                    name:       CH_PREFIX + 'color-textbox-' + color,
+                    type:       'text',
+                })
+            )
+        return colorPicker;
+    }
+
     /*
      ================================
             PRIVATE PROPERTIES
@@ -88,16 +128,6 @@ function ColorHack() {
             id:         CH_PREFIX + 'menu',
             'class':    CH_CLASS
         })
-    ;
-
-    // Menu icon located on the bottom-right of the page.
-    // Toggles visibility of the toolbar.
-    var _icon =
-        $('<h1/>', {
-            id:         CH_PREFIX + 'icon',
-            'class':    CH_CLASS
-        })
-        .text('ColorHack')
     ;
 
     // Toolbar located on the bottom-right of the page.
@@ -134,6 +164,18 @@ function ColorHack() {
             })()
         )
         .hide()
+        .appendTo(_menu)
+    ;
+
+    // Menu icon located on the bottom-right of the page.
+    // Toggles visibility of the toolbar.
+    var _icon =
+        $('<h1/>', {
+            id:         CH_PREFIX + 'icon',
+            'class':    CH_CLASS
+        })
+        .text('ColorHack')
+        .appendTo(_menu)
     ;
 
     /*
@@ -211,40 +253,16 @@ function ColorHack() {
             'class':    CH_CLASS,
         })
         .append(
-            $('<div/>', {
-                id:         CH_PREFIX + 'color-settings_color-red',
-                'class':    CH_CLASS + ' ' +
-                            CH_PREFIX + 'color-settings_color',
-            })
-            .append(
-                $('<canvas/>', {
-                    id:         CH_PREFIX + 'color-settings_color-picker-red',
-                    'class':    CH_CLASS + ' ' +
-                                CH_PREFIX + 'color-picker',
-                    height:     '25px',
-                    width:      '256px'
-                })
-                .append(
-                    $('<p/>').html('Your browser does not support this feature')
-                )
-            )
-            .append(
-                $('<input/>', {
-                    id:         CH_PREFIX + 'color-settings_color-textbox-red',
-                    'class':    CH_CLASS + ' ' +
-                                CH_PREFIX + 'color-textbox',
-                    name:       'color-textbox-red',
-                    type:       'text',
-                })
-            )
-            .append(
-                $('<label/>', {
-                    id:         CH_PREFIX + 'color-settings_color-label-red',
-                    'class':    CH_CLASS + ' ' +
-                                CH_PREFIX + 'color-label',
-                    'for':      'color-textbox-red'
-                })
-            )
+            _CreateColorPicker('red')
+        )
+        .append(
+            _CreateColorPicker('blue')
+        )
+        .append(
+            _CreateColorPicker('green')
+        )
+        .append(
+            _CreateColorPicker('alpha')
         )
         .appendTo(_colorSettings)
     ;
@@ -287,12 +305,22 @@ function ColorHack() {
     
     // Primary components used by ColorHack.
     this.components = {
-        menu:               _menu,
-        icon:               _icon,
-        toolbar:            _toolbar,
-        'color-schemes':    _colorSchemes,
-        'color-settings':   _colorSettings,
-        'element-details':  _elementDetails
+        menu:                       _menu,
+        icon:                       _icon,
+        toolbar:                    _toolbar,
+
+        'color-schemes':            _colorSchemes,
+
+        'color-settings':           _colorSettings,
+        'color-settings_colors':     _colorSettingsColors,
+        'color-pickers':            {
+                                        red:    _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker-red'),
+                                        green:   _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker-green'),
+                                        blue:  _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker-blue'),
+                                        alpha:  _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker-alpha')
+                                    },
+
+        'element-details':          _elementDetails
     };
 
     /*
@@ -302,19 +330,72 @@ function ColorHack() {
      */
 
     // Builds the DOM for ColorHack elements.
-    this.AssembleComponents = function() {
+    this.BuildDialogs = function() {
         $(document.body)
-            // Build bottom-right menu and add it to page
-            .append(this.components.menu
-                .append(this.components.toolbar)
-                .append(this.components.icon)
-                .appendTo(document.body)
-            )
+            // Add menu to page
+            .append(this.components.menu)
             // Add dialogs to page
             .append(this.components['color-schemes'])
             .append(this.components['color-settings'])
             .append(this.components['element-details'])
         ;
+    }
+
+    // Sets up the color picker components.
+    this.SetupColorPickers = function() {
+        var colors = ['red', 'blue', 'green'];
+        var canvas, context;
+
+        // Set up canvas for R, G, and B color pickers.
+        for (i = 0; i < colors.length; i++) {
+            // Get color picker canvas and context.
+            canvas = this.components['color-pickers'][colors[i]].get(0);
+            if (typeof canvas === 'undefined') continue;
+            context = canvas.getContext('2d');
+            if (typeof context === 'undefined') continue;
+
+            // Fill color picker with color gradient.
+            var hueWidth = canvas.width / 256;
+            var hueHeight = canvas.height;
+            if (colors[i] === 'red') {
+                for (j = 0; j < 256; j++) {
+                    context.fillStyle = 'rgb(' + j + ', 0, 0)';
+                    context.fillRect(j * hueWidth, 0, hueWidth, hueHeight);
+                }
+            }
+            else if (colors[i] === 'blue') {
+                for (j = 0; j < 256; j++) {
+                    context.fillStyle = 'rgb(0, ' + j + ', 0)';
+                    context.fillRect(j * hueWidth, 0, hueWidth, hueHeight);
+                }
+            }
+            else if (colors[i] === 'green') {
+                for (j = 0; j < 256; j++) {
+                    context.fillStyle = 'rgb(0, 0, ' + j + ')';
+                    context.fillRect(j * hueWidth, 0, hueWidth, hueHeight);
+                }
+            }
+        }
+
+        // Set up canvas for alpha color picker.
+        // Get color picker canvas and context.
+        canvas = this.components['color-pickers'].alpha.get(0);
+        if (typeof canvas === 'undefined') return;
+        context = canvas.getContext('2d');
+        if (typeof context === 'undefined') return;
+
+        // Fill color picker background with alpha channel grid.
+        context.fillStyle = '#9F9F9F'; // Light grey
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = '#636363'; // Dark grey
+
+        for (j = 0; j < canvas.height / 8; j++) {
+            k = (j % 2 === 0) ? 1 : 0;
+
+            for (; k < canvas.width / 8; k += 2) {
+                context.fillRect(k * 8, j * 8, 8, 8);
+            }
+        }
     }
 
     // Creates and attaches events for ColorHack elements.
@@ -380,7 +461,8 @@ function ColorHack() {
 
     // Sets up ColorHack on the page.
     this.Init = function() {
-        this.AssembleComponents();
+        this.BuildDialogs();
+        this.SetupColorPickers();
         this.AttachEvents();
     }
 }
@@ -663,19 +745,30 @@ function LoadStylesheet() {
             'left:' +               '4px;',
         '}',
 
-        '#' + CH_PREFIX + 'color-settings_colors {',
-            'height:' +             '120px',
-        '}',
-        '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-settings_color-red {',
-            'height:' +             '30px',
-        '}',
-
         // Color settings dialog
         '#' + CH_PREFIX + 'color-settings {',
             'height:' +             DIALOG_COLOR_SETTINGS_HEIGHT + 'px;',
             'width:' +              DIALOG_COLOR_SETTINGS_WIDTH + 'px;',
             'top:' +                '4px;',
             'right:' +              '4px;',
+        '}',
+
+        '#' + CH_PREFIX + 'color-settings_colors {',
+            'height:' +             '120px;',
+        '}',
+        '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-settings_color {',
+            'margin:' +             '6px 0;',
+        '}',
+        '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-label {',
+            'width:' +              '16px;',
+            'display:' +            'inline-block;',
+            'font-size:' +          '14px;',
+            'vertical-align:' +     'top;',
+        '}',
+        '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-textbox {',
+            'height:' +             '24px;',
+            'width:' +              '48px;',
+            'vertical-align:' +     'top;',
         '}',
 
         // Element details dialog
