@@ -202,16 +202,16 @@ function ColorHack() {
             //containment:    'body',
             scroll:         false,
             zIndex:         BASE_Z_INDEX + 100,
-            handle:         '.' + CH_PREFIX + 'dialog-header',
+            handle:         '.' + CH_PREFIX + 'dialog-header'/*,
             /* 
              * There seems to be an issue with jQuery UI draggable containment option and fixed position elements:
              * http://bugs.jqueryui.com/ticket/6181
              * Seems like the issue still exists for integer array values.
              */
-            containment:    (function() {
+            /* containment:    (function() {
                                 var $window = $(window);
                                 return [0, 0, $window.width() - DIALOG_COLOR_SCHEMES_WIDTH, $window.height() - DIALOG_COLOR_SCHEMES_HEIGHT]
-                            })()
+                            })() */
         })
     ;
 
@@ -237,11 +237,11 @@ function ColorHack() {
         .draggable({
             scroll:         false,
             zIndex:         BASE_Z_INDEX + 100,
-            handle:         '.' + CH_PREFIX + 'dialog-header',
+            handle:         '.' + CH_PREFIX + 'dialog-header'/*,
             containment:    (function() {
                                 var $window = $(window);
                                 return [0, 0, $window.width() - DIALOG_COLOR_SETTINGS_WIDTH, $window.height() - DIALOG_COLOR_SETTINGS_HEIGHT]
-                            })()
+                            })()*/
         })
     ;
 
@@ -290,11 +290,11 @@ function ColorHack() {
             .draggable({
                 scroll:         false,
                 zIndex:         BASE_Z_INDEX + 100,
-                handle:         '.' + CH_PREFIX + 'dialog-header',
+                handle:         '.' + CH_PREFIX + 'dialog-header'/*,
                 containment:    (function() {
                                     var $window = $(window);
                                     return [0, 0, $window.width() - DIALOG_ELEMENT_DETAILS_WIDTH, $window.height() - DIALOG_ELEMENT_DETAILS_HEIGHT]
-                                })()
+                                })()*/
             })
     ;
 
@@ -392,20 +392,6 @@ function ColorHack() {
 
     // Creates and attaches events for ColorHack elements.
     this.AttachEvents = function() {
-        // Menu events
-        this.components.menu
-            // Hovering over the menu should change the opacity of child elements.
-            // I don't remember why I decided not to do this with the :hover pseudoclass...
-            .hover(function() {
-                $(this).children('#' + CH_PREFIX + 'icon, #' + CH_PREFIX + 'toolbar').css({
-                    opacity:    '1'
-                });
-            }, function() {
-                $(this).children('#' + CH_PREFIX + 'icon, #' + CH_PREFIX + 'toolbar').css({
-                    opacity:    '0.6'
-                });
-            })
-
         // Icon events
         this.components.icon
             // Clicking the menu icon should toggle visibility of the toolbar.
@@ -452,7 +438,21 @@ function ColorHack() {
     }
 
     this.SetDefaults = function() {
-        // Set default color in color settings to white.
+        // Set dialog positions
+        this.components['color-schemes'].css({
+            'top':  '4px',
+            left:   '4px'
+        });
+        this.components['color-settings'].css({
+            'top':  '4px',
+            right:  '4px'
+        });
+        this.components['element-details'].css({
+            bottom: '4px',
+            left:   '4px'
+        });
+
+        // Set color in color settings to white.
         this.components['color-settings_colors']
             .find('.' + CH_PREFIX + 'color-textbox').val(255);
 
@@ -645,7 +645,8 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header {',
             'color:' +              'rgb(60, 60, 60);',
             'background:' +         'rgb(240, 240, 240);', // won't be applied if browser supports CSS3
-            'cursor:' +             'pointer;',
+            'cursor:' +             'move;',
+            'text-shadow:' +        '0 1px rgb(250, 250, 250);',
 
             'background:' +         '-ms-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
             'background:' +         '-moz-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
@@ -671,8 +672,13 @@ function LoadStylesheet() {
             'opacity:' +            '0.6;',
             'border:' +             '2px solid rgb(60, 60, 60);',
         '}',
+        '#' + CH_PREFIX + 'menu:hover #' + CH_PREFIX + 'icon,',
+        '#' + CH_PREFIX + 'menu:hover #' + CH_PREFIX + 'toolbar {',
+            'opacity:' +            '1;',
+        '}',
         '#' + CH_PREFIX + 'icon {',
             'padding:' +            '4px 0;',
+            'cursor:' +             'pointer;',
         '}',
         '#' + CH_PREFIX + 'toolbar {',
             'border-bottom:' +      '0;',
@@ -740,6 +746,7 @@ function LoadStylesheet() {
             'right:' +              '0;',
             'padding:' +            '0 8px 4px 8px;',
 
+            'cursor:' +             'pointer;',
             'opacity:' +            '0.6;',
 
             'font-size:' +          '18px;',
@@ -754,20 +761,16 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'color-schemes {',
             'height:' +             DIALOG_COLOR_SCHEMES_HEIGHT + 'px;',
             'width:' +              DIALOG_COLOR_SCHEMES_WIDTH + 'px;',
-            'top:' +                '4px;',
-            'left:' +               '4px;',
         '}',
 
         // Color settings dialog
         '#' + CH_PREFIX + 'color-settings {',
             'height:' +             DIALOG_COLOR_SETTINGS_HEIGHT + 'px;',
             'width:' +              DIALOG_COLOR_SETTINGS_WIDTH + 'px;',
-            'top:' +                '4px;',
-            'right:' +              '4px;',
         '}',
 
         '#' + CH_PREFIX + 'color-settings_colors {',
-            'height:' +             '120px;',
+            'position:' +           'relative;',
         '}',
         '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-settings_color {',
             'margin:' +             '6px 0;',
@@ -788,8 +791,6 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'element-details {',
             'height:' +             DIALOG_ELEMENT_DETAILS_HEIGHT + 'px;',
             'width:' +              DIALOG_ELEMENT_DETAILS_WIDTH + 'px;',
-            'bottom:' +             '4px;',
-            'left:' +               '4px;',
         '}'
     ]
 
