@@ -79,15 +79,42 @@ function ColorHack() {
                 .html(color.substring(0, 1).toUpperCase() + ':')
             )
             .append(
-                $('<canvas/>', { // color picker
+                $('<div/>', { // color picker
                     id:         CH_PREFIX + 'color-settings_color-picker-' + color,
                     'class':    CH_CLASS + ' ' +
                                 CH_PREFIX + 'color-picker',
-                    'Height':   '24px', // WARNING: This is a hack, since
-                    'Width':    '256px' // normally it changes CSS height and width.
                 })
                 .append(
-                    $('<p/>').html('Your browser does not support this feature')
+                    $('<canvas/>', { // color picker gradient
+                        id:         CH_PREFIX + 'color-settings_color-picker_gradient-' + color,
+                        'class':    CH_CLASS + ' ' +
+                                    CH_PREFIX + 'color-picker_gradient',
+                        'Height':   '24px', // WARNING: This is a hack, since this normally it changes
+                        'Width':    '256px' // the CSS height/width and not the element's height/width.
+                    })
+                    .append(
+                        $('<p/>').html('Your browser does not support this feature')
+                    )
+                )
+                .append(
+                    $('<div/>', { // color picker selector
+                        id:         CH_PREFIX + 'color-settings_color-picker_selector-' + color,
+                        'class':    CH_CLASS + ' ' +
+                                    CH_PREFIX + 'color-picker_selector'
+                    })
+                    .draggable({
+                        axis:           'x',
+                        containment:    'parent',
+                        start:          function(e, ui) { // drag start
+                            $(e.target).css('opacity', 1); // want opaque selector while dragging
+                        },
+                        drag:           function(e, ui) { // during drag
+                            $this = $(e.target);
+                        },
+                        stop:           function(e, ui) { // drag stop
+                            $(e.target).css('opacity', '');
+                        }
+                    })
                 )
             )
             .append(
@@ -316,9 +343,15 @@ function ColorHack() {
         'color-settings_colors':     _colorSettingsColors,
         'color-pickers':            {
                                         red:    _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker-red'),
-                                        green:   _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker-green'),
-                                        blue:  _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker-blue'),
+                                        green:  _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker-green'),
+                                        blue:   _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker-blue'),
                                         alpha:  _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker-alpha')
+                                    },
+        'color-picker_gradients':    {
+                                        red:    _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker_gradient-red'),
+                                        green:  _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker_gradient-green'),
+                                        blue:   _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker_gradient-blue'),
+                                        alpha:  _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker_gradient-alpha')
                                     },
 
         'element-details':          _elementDetails
@@ -355,7 +388,7 @@ function ColorHack() {
         // Set up canvas for R, G, and B color pickers.
         for (i = 0; i < colors.length; i++) {
             // Get color picker canvas and context.
-            canvas = this.components['color-pickers'][colors[i].name].get(0);
+            canvas = this.components['color-picker_gradients'][colors[i].name].get(0);
             if (typeof canvas === 'undefined') continue;
             context = canvas.getContext('2d');
             if (typeof context === 'undefined') continue;
@@ -371,7 +404,7 @@ function ColorHack() {
 
         // Set up canvas for alpha color picker.
         // Get color picker canvas and context.
-        canvas = this.components['color-pickers'].alpha.get(0);
+        canvas = this.components['color-picker_gradients'].alpha.get(0);
         if (typeof canvas === 'undefined') return;
         context = canvas.getContext('2d');
         if (typeof context === 'undefined') return;
@@ -452,12 +485,12 @@ function ColorHack() {
             left:   '4px'
         });
 
-        // Set color in color settings to white.
+        // Set color in color settings to black.
         this.components['color-settings_colors']
-            .find('.' + CH_PREFIX + 'color-textbox').val(255);
+            .find('.' + CH_PREFIX + 'color-textbox').val(0);
 
         // Get alpha channel color picker canvas and context.
-        canvas = this.components['color-pickers'].alpha.get(0);
+        canvas = this.components['color-picker_gradients'].alpha.get(0);
         if (typeof canvas === 'undefined') return;
         context = canvas.getContext('2d');
         if (typeof context === 'undefined') return;
@@ -465,7 +498,7 @@ function ColorHack() {
         // Fill color picker with color gradient.
         linearGradient = context.createLinearGradient(0, 0, canvas.width, 0);
         linearGradient.addColorStop(0, 'rgba(0, 0, 0, 0)'); // transparent
-        linearGradient.addColorStop(1, '#FFFFFF'); // white
+        linearGradient.addColorStop(1, '#000000'); // white
 
         context.fillStyle = linearGradient;
         context.fillRect(0, 0, canvas.width, canvas.height);
@@ -645,7 +678,6 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header {',
             'color:' +              'rgb(60, 60, 60);',
             'background:' +         'rgb(240, 240, 240);', // won't be applied if browser supports CSS3
-            'cursor:' +             'move;',
             'text-shadow:' +        '0 1px rgb(250, 250, 250);',
 
             'background:' +         '-ms-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
@@ -657,24 +689,24 @@ function LoadStylesheet() {
 
         // Menu
         '#' + CH_PREFIX + 'menu {',
-            'z-index:' +            (BASE_Z_INDEX + 10) + ';',
+            'z-index:' +            (BASE_Z_INDEX + 50) + ';',
             'bottom:' +             '0;',
             'right:' +              '0;',
             'margin:' +             '4px;',
 
+            'opacity:' +            '0.6;',
+
             'font-size:' +          '16px;',
             'text-align:' +         'center;',
+        '}',
+        '#' + CH_PREFIX + 'menu:hover {',
+            'opacity:' +            '1;',
         '}',
         '#' + CH_PREFIX + 'icon,',
         '#' + CH_PREFIX + 'toolbar {',
             'width:' +              '150px;',
 
-            'opacity:' +            '0.6;',
             'border:' +             '2px solid rgb(60, 60, 60);',
-        '}',
-        '#' + CH_PREFIX + 'menu:hover #' + CH_PREFIX + 'icon,',
-        '#' + CH_PREFIX + 'menu:hover #' + CH_PREFIX + 'toolbar {',
-            'opacity:' +            '1;',
         '}',
         '#' + CH_PREFIX + 'icon {',
             'padding:' +            '4px 0;',
@@ -709,7 +741,7 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'color-schemes,',
         '#' + CH_PREFIX + 'color-settings,',
         '#' + CH_PREFIX + 'element-details {',
-            'z-index:' +            (BASE_Z_INDEX + 1) + ';',
+            'z-index:' +            BASE_Z_INDEX + ';',
 
             'opacity:' +            '0.6;',
             'color:' +              'rgb(240, 240, 240);',
@@ -729,6 +761,7 @@ function LoadStylesheet() {
             'position:' +           'relative;',
             'padding:' +            '4px 0;',
 
+            'cursor:' +             'move;',
             'font-size:' +          '14px;',
             'text-align:' +         'center;',
             'white-space:' +        'nowrap;',
@@ -770,16 +803,70 @@ function LoadStylesheet() {
         '}',
 
         '#' + CH_PREFIX + 'color-settings_colors {',
+            'margin:' +             '6px 0px;',
+            'padding:' +            '2px 4px;',
             'position:' +           'relative;',
+            'z-index:' +            (BASE_Z_INDEX + 11) + ';',
+
+            'background:' +         'rgb(90, 90, 90);',
+
+            '-ms-box-shadow:' +     '0 0 16px 4px rgb(70, 70, 70) inset;',
+            '-moz-box-shadow:' +    '0 0 16px 4px rgb(70, 70, 70) inset;',
+            '-webkit-box-shadow:' + '0 0 16px 4px rgb(70, 70, 70) inset;',
+            '-o-box-shadow:' +      '0 0 16px 4px rgb(70, 70, 70) inset;',
+            'box-shadow:' +         '0 0 16px 4px rgb(70, 70, 70) inset;',
+        '}',
+        '#' + CH_PREFIX + 'color-settings_colors:hover {',
+            'background:' +         'rgb(100, 100, 100);',
         '}',
         '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-settings_color {',
             'margin:' +             '6px 0;',
         '}',
-        '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-label {',
-            'width:' +              '16px;',
+        '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-picker {',
+            'margin:' +             '0 8px;',
             'display:' +            'inline-block;',
+            'height:' +             '24px;',
+            'width:' +              '266px;', // width of gradient + width of selector
+            'position:' +           'relative;',
+            'z-index:' +            (BASE_Z_INDEX + 12) + ';',
+        '}',
+        '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-label {',
+            'display:' +            'inline-block;',
+            'width:' +              '12px;',
+            'position:' +           'relative;',
+            'top:' +                '4px;',
+
             'font-size:' +          '14px;',
             'vertical-align:' +     'top;',
+        '}',
+        '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-picker_gradient {',
+            'position:' +           'absolute;',
+            'left:' +               '5px;', // half width of selector
+            'z-index:' +            (BASE_Z_INDEX + 13) + ';',
+        '}',
+        '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-picker_selector {',
+            'height:' +             '6px;',
+            'width:' +              '6px;',
+            // Position is !important to overwrite jQuery inline style of position: relative for Chrome.
+            'position:' +           'absolute !important;',
+            'top:' +                '7px;',
+            'left:' +               '0px;',
+            'z-index:' +            (BASE_Z_INDEX + 14) + ';',
+
+            'opacity:' +            '0.6;',
+            'background:' +         'rgb(140, 140, 140);',
+            'border:' +             '2px solid rgb(180, 180, 180);',
+
+            'cursor:' +             'pointer;',
+
+            '-ms-border-radius:' +      '4px;',
+            '-moz-border-radius:' +     '4px;',
+            '-webkit-border-radius:' +  '4px;',
+            '-o-border-radius:' +       '4px;',
+            'border-radius:' +          '4px;',
+        '}',
+        '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-picker_selector:hover {',
+            'opacity:' +            '1;',
         '}',
         '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-textbox {',
             'height:' +             '16px;',
