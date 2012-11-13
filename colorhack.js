@@ -485,9 +485,11 @@ function ColorHack() {
             left:   '4px'
         });
 
-        // Set color in color settings to black.
+        // Set color in color settings to white.
         this.components['color-settings_colors']
-            .find('.' + CH_PREFIX + 'color-textbox').val(0);
+            .find('.' + CH_PREFIX + 'color-textbox').val(255);
+        this.components['color-settings_colors']
+            .find('.' + CH_PREFIX + 'color-picker_selector').css('left', '255px');
 
         // Get alpha channel color picker canvas and context.
         canvas = this.components['color-picker_gradients'].alpha.get(0);
@@ -497,8 +499,8 @@ function ColorHack() {
 
         // Fill color picker with color gradient.
         linearGradient = context.createLinearGradient(0, 0, canvas.width, 0);
-        linearGradient.addColorStop(0, 'rgba(0, 0, 0, 0)'); // transparent
-        linearGradient.addColorStop(1, '#000000'); // white
+        linearGradient.addColorStop(0, 'rgba(255, 255, 255, 0)'); // transparent
+        linearGradient.addColorStop(1, '#FFF'); // white
 
         context.fillStyle = linearGradient;
         context.fillRect(0, 0, canvas.width, canvas.height);
@@ -826,7 +828,7 @@ function LoadStylesheet() {
             'margin:' +             '0 8px;',
             'display:' +            'inline-block;',
             'height:' +             '24px;',
-            'width:' +              '266px;', // width of gradient + width of selector
+            'width:' +              '265px;', // width of gradient + width of selector - 1
             'position:' +           'relative;',
             'z-index:' +            (BASE_Z_INDEX + 12) + ';',
         '}',
@@ -853,9 +855,9 @@ function LoadStylesheet() {
             'left:' +               '0px;',
             'z-index:' +            (BASE_Z_INDEX + 14) + ';',
 
-            'opacity:' +            '0.6;',
-            'background:' +         'rgb(140, 140, 140);',
-            'border:' +             '2px solid rgb(180, 180, 180);',
+            'opacity:' +            '0.8;',
+            'background:' +         'rgb(120, 120, 120);',
+            'border:' +             '2px solid rgb(160, 160, 160);',
 
             'cursor:' +             'pointer;',
 
