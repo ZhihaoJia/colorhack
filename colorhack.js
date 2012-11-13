@@ -36,6 +36,56 @@ function ColorHack() {
      ================================
      */
 
+    // Fills a given color gradient for a color picker based on input colors.
+    var _FillGradient = function(colorGradients, color, startHue, stopHue) {
+        // Get color picker canvas and context.
+        canvas = colorGradients[color].get(0);
+        if (typeof canvas === 'undefined') return;
+        context = canvas.getContext('2d');
+        if (typeof context === 'undefined') return;
+
+        if (color === 'alpha') {
+            // Fill color picker background with alpha channel grid.
+            context.fillStyle = '#9F9F9F'; // Light grey
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = '#636363'; // Dark grey
+
+            for (j = 0; j < canvas.height / 8; j++) {
+                k = (j % 2 === 0) ? 1 : 0;
+
+                for (; k < canvas.width / 8; k += 2) {
+                    context.fillRect(k * 8, j * 8, 8, 8);
+                }
+            }
+        }
+
+        // Fill color picker with color gradient.
+        linearGradient = context.createLinearGradient(0, 0, canvas.width, 0);
+        linearGradient.addColorStop(0, startHue);
+        linearGradient.addColorStop(1, stopHue);
+
+        context.fillStyle = linearGradient;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Performs all updates needed when changing the active color in the color settings dialog.
+    // Note that changedVal is equal to one of redVal, greenVal, or blueVal.
+    var _UpdateColor = function($source, color, redVal, greenVal, blueVal, alphaVal, changedVal) {
+        var temp;
+
+        // Update textbox value.
+        $source.parent().siblings('.' + CH_PREFIX + 'color-textbox').val(changedVal);
+        // Update color shown in alpha color picker gradient.
+        if (color !== 'alpha') {
+            _FillGradient(
+                COLORHACK.components['color-picker_gradients'],
+                'alpha',
+                'rgba(' + redVal + ', ' + greenVal + ', ' + blueVal + ', 0)',
+                'rgba(' + redVal + ', ' + greenVal + ', ' + blueVal + ', ' + alphaVal + ')'
+            );
+        }
+    }
+
     // Creates dialog header elements.
     var _CreateDialogHeader = function(title) {
         var header =
@@ -95,6 +145,7 @@ function ColorHack() {
                     .append(
                         $('<p/>').html('Your browser does not support this feature')
                     )
+                    .data('color', color)
                 )
                 .append(
                     $('<div/>', { // color picker selector
@@ -109,13 +160,35 @@ function ColorHack() {
                             $(e.target).css('opacity', 1); // want opaque selector while dragging
                         },
                         drag:           function(e, ui) { // during drag
-                            $this = $(e.target);
+                            if (typeof COLORHACK === 'undefined') return;
+                            var $this = $(e.target);
+                            var hue = $this.data('color');
+                            var colors = ['red', 'green', 'blue', 'alpha'];
+                            var colorValues = {};
+                            var temp;
+
+                            // Get the rgb value for each specific hue
+                            for (i = 0; i < colors.length; i++) {
+                                temp = COLORHACK.components['color-pickers'][colors[i]]
+                                    .find('.' + CH_PREFIX + 'color-picker_selector').css('left');
+                                colorValues[colors[i]] = temp.substring(0, temp.length - 2);
+                                if (color === 'alpha') {
+                                    colorValues[color] = colorValues[colors[i]] / 255; // alpha is expressed as decimal 0 <= a <= 1
+                                }
+                            }
+                            var newVal = $this.css('left');
+                            newVal = newVal.substring(0, newVal.length - 2);
+
+                            // Perform changes for new hue value
+                            _UpdateColor($this, hue, colorValues.red, colorValues.green, colorValues.blue, colorValues.alpha, newVal);
                         },
                         stop:           function(e, ui) { // drag stop
                             $(e.target).css('opacity', '');
                         }
                     })
+                    .data('color', color)
                 )
+                .data('color', color)
             )
             .append(
                 $('<input/>', { // textbox for color picker - numerical value for color intensity
@@ -378,48 +451,20 @@ function ColorHack() {
     // Sets up the color picker components.
     this.SetupColorPickers = function() {
         var colors = [
-            { name: 'red',      color: '#FF0000' },
-            { name: 'green',    color: '#00FF00' },
-            { name: 'blue',     color: '#0000FF' }
+            { name: 'red',      startColor: '#000',             stopColor: '#FF0000'    },
+            { name: 'green',    startColor: '#000',             stopColor: '#00FF00'    },
+            { name: 'blue',     startColor: '#000',             stopColor: '#0000FF'    },
+            { name: 'alpha',    startColor: 'rgba(0, 0, 0, 0)', stopColor: '#000'       }
         ];
-        var canvas, context;
-        var linearGradient;
 
         // Set up canvas for R, G, and B color pickers.
         for (i = 0; i < colors.length; i++) {
-            // Get color picker canvas and context.
-            canvas = this.components['color-picker_gradients'][colors[i].name].get(0);
-            if (typeof canvas === 'undefined') continue;
-            context = canvas.getContext('2d');
-            if (typeof context === 'undefined') continue;
-
-            // Fill color picker with color gradient.
-            linearGradient = context.createLinearGradient(0, 0, canvas.width, 0);
-            linearGradient.addColorStop(0, '#000'); // black
-            linearGradient.addColorStop(1, colors[i].color);
-
-            context.fillStyle = linearGradient;
-            context.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        // Set up canvas for alpha color picker.
-        // Get color picker canvas and context.
-        canvas = this.components['color-picker_gradients'].alpha.get(0);
-        if (typeof canvas === 'undefined') return;
-        context = canvas.getContext('2d');
-        if (typeof context === 'undefined') return;
-
-        // Fill color picker background with alpha channel grid.
-        context.fillStyle = '#9F9F9F'; // Light grey
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.fillStyle = '#636363'; // Dark grey
-
-        for (j = 0; j < canvas.height / 8; j++) {
-            k = (j % 2 === 0) ? 1 : 0;
-
-            for (; k < canvas.width / 8; k += 2) {
-                context.fillRect(k * 8, j * 8, 8, 8);
-            }
+            _FillGradient(
+                this.components['color-picker_gradients'],
+                colors[i].name,
+                colors[i].startColor,
+                colors[i].stopColor
+            );
         }
     }
 
@@ -490,20 +535,12 @@ function ColorHack() {
             .find('.' + CH_PREFIX + 'color-textbox').val(255);
         this.components['color-settings_colors']
             .find('.' + CH_PREFIX + 'color-picker_selector').css('left', '255px');
-
-        // Get alpha channel color picker canvas and context.
-        canvas = this.components['color-picker_gradients'].alpha.get(0);
-        if (typeof canvas === 'undefined') return;
-        context = canvas.getContext('2d');
-        if (typeof context === 'undefined') return;
-
-        // Fill color picker with color gradient.
-        linearGradient = context.createLinearGradient(0, 0, canvas.width, 0);
-        linearGradient.addColorStop(0, 'rgba(255, 255, 255, 0)'); // transparent
-        linearGradient.addColorStop(1, '#FFF'); // white
-
-        context.fillStyle = linearGradient;
-        context.fillRect(0, 0, canvas.width, canvas.height);
+        _FillGradient(
+            this.components['color-picker_gradients'],
+            'alpha',
+            'rgba(255, 255, 255, 0)',
+            'rgba(255, 255, 255, 1)'
+        );
     }
 
     // Sets up ColorHack on the page.
@@ -845,6 +882,8 @@ function LoadStylesheet() {
             'position:' +           'absolute;',
             'left:' +               '5px;', // half width of selector
             'z-index:' +            (BASE_Z_INDEX + 13) + ';',
+
+            'cursor:' +             'crosshair;',
         '}',
         '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-picker_selector {',
             'height:' +             '6px;',
@@ -859,7 +898,7 @@ function LoadStylesheet() {
             'background:' +         'rgb(120, 120, 120);',
             'border:' +             '2px solid rgb(160, 160, 160);',
 
-            'cursor:' +             'pointer;',
+            'cursor:' +             'crosshair;',
 
             '-ms-border-radius:' +      '4px;',
             '-moz-border-radius:' +     '4px;',
