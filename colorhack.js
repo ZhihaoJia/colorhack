@@ -81,7 +81,7 @@ function ColorHack() {
                 COLORHACK.components['color-picker_gradients'],
                 'alpha',
                 'rgba(' + redVal + ', ' + greenVal + ', ' + blueVal + ', 0)',
-                'rgba(' + redVal + ', ' + greenVal + ', ' + blueVal + ', ' + alphaVal + ')'
+                'rgba(' + redVal + ', ' + greenVal + ', ' + blueVal + ', 1)'
             );
         }
     }
