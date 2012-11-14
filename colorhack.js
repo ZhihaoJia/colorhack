@@ -153,39 +153,6 @@ function ColorHack() {
                         'class':    CH_CLASS + ' ' +
                                     CH_PREFIX + 'color-picker_selector'
                     })
-                    .draggable({
-                        axis:           'x',
-                        containment:    'parent',
-                        start:          function(e, ui) { // drag start
-                            $(e.target).css('opacity', 1); // want opaque selector while dragging
-                        },
-                        drag:           function(e, ui) { // during drag
-                            if (typeof COLORHACK === 'undefined') return;
-                            var $this = $(e.target);
-                            var hue = $this.data('color');
-                            var colors = ['red', 'green', 'blue', 'alpha'];
-                            var colorValues = {};
-                            var temp;
-
-                            // Get the rgb value for each specific hue
-                            for (i = 0; i < colors.length; i++) {
-                                temp = COLORHACK.components['color-pickers'][colors[i]]
-                                    .find('.' + CH_PREFIX + 'color-picker_selector').css('left');
-                                colorValues[colors[i]] = temp.substring(0, temp.length - 2);
-                                if (color === 'alpha') {
-                                    colorValues[color] = colorValues[colors[i]] / 255; // alpha is expressed as decimal 0 <= a <= 1
-                                }
-                            }
-                            var newVal = $this.css('left');
-                            newVal = newVal.substring(0, newVal.length - 2);
-
-                            // Perform changes for new hue value
-                            _UpdateColor($this, hue, colorValues.red, colorValues.green, colorValues.blue, colorValues.alpha, newVal);
-                        },
-                        stop:           function(e, ui) { // drag stop
-                            $(e.target).css('opacity', '');
-                        }
-                    })
                     .data('color', color)
                 )
                 .data('color', color)
@@ -297,22 +264,6 @@ function ColorHack() {
         .append(
             _CreateDialogHeader('Color Schemes')
         )
-        // Allow dialog to be dragged.
-        .draggable({
-            //containment:    'body',
-            scroll:         false,
-            zIndex:         BASE_Z_INDEX + 100,
-            handle:         '.' + CH_PREFIX + 'dialog-header'/*,
-            /* 
-             * There seems to be an issue with jQuery UI draggable containment option and fixed position elements:
-             * http://bugs.jqueryui.com/ticket/6181
-             * Seems like the issue still exists for integer array values.
-             */
-            /* containment:    (function() {
-                                var $window = $(window);
-                                return [0, 0, $window.width() - DIALOG_COLOR_SCHEMES_WIDTH, $window.height() - DIALOG_COLOR_SCHEMES_HEIGHT]
-                            })() */
-        })
     ;
 
     /*
@@ -333,16 +284,6 @@ function ColorHack() {
         .append(
             _CreateDialogHeader('Color Settings')
         )
-        // Allow dialog to be dragged.
-        .draggable({
-            scroll:         false,
-            zIndex:         BASE_Z_INDEX + 100,
-            handle:         '.' + CH_PREFIX + 'dialog-header'/*,
-            containment:    (function() {
-                                var $window = $(window);
-                                return [0, 0, $window.width() - DIALOG_COLOR_SETTINGS_WIDTH, $window.height() - DIALOG_COLOR_SETTINGS_HEIGHT]
-                            })()*/
-        })
     ;
 
     // Color picker component of color settings dialog.
@@ -377,25 +318,15 @@ function ColorHack() {
     // Element details dialog.
     // Shows details on element attributes and applied color rules.
     var _elementDetails =
-            $('<div/>', {
-                id:         CH_PREFIX + 'element-details',
-                'class':    CH_CLASS + ' ' +
-                            CH_PREFIX + 'dialog'
-            })
-            // Add dialog header
-            .append(
-                _CreateDialogHeader('Element Details')
-            )
-            // Allow dialog to be dragged
-            .draggable({
-                scroll:         false,
-                zIndex:         BASE_Z_INDEX + 100,
-                handle:         '.' + CH_PREFIX + 'dialog-header'/*,
-                containment:    (function() {
-                                    var $window = $(window);
-                                    return [0, 0, $window.width() - DIALOG_ELEMENT_DETAILS_WIDTH, $window.height() - DIALOG_ELEMENT_DETAILS_HEIGHT]
-                                })()*/
-            })
+        $('<div/>', {
+            id:         CH_PREFIX + 'element-details',
+            'class':    CH_CLASS + ' ' +
+                        CH_PREFIX + 'dialog'
+        })
+        // Add dialog header
+        .append(
+            _CreateDialogHeader('Element Details')
+        )
     ;
 
     /*
@@ -409,6 +340,11 @@ function ColorHack() {
         menu:                       _menu,
         icon:                       _icon,
         toolbar:                    _toolbar,
+
+        dialogs:                    $()
+                                        .add(_colorSchemes)
+                                        .add(_colorSettings)
+                                        .add(_elementDetails),
 
         'color-schemes':            _colorSchemes,
 
@@ -504,6 +440,23 @@ function ColorHack() {
         })
 
         // Dialog events
+        // Drag dialogs by dialog header.
+        this.components.dialogs.draggable({
+            //containment:    'body',
+            scroll:         false,
+            zIndex:         BASE_Z_INDEX + 100,
+            handle:         '.' + CH_PREFIX + 'dialog-header'/*,
+            /*
+             * There seems to be an issue with jQuery UI draggable containment option and fixed position elements:
+             * http://bugs.jqueryui.com/ticket/6181
+             * Seems like the issue still exists for integer array values.
+             */
+            /* containment:    (function() {
+                                var $window = $(window);
+                                return [0, 0, $window.width() - DIALOG_COLOR_SCHEMES_WIDTH, $window.height() - DIALOG_COLOR_SCHEMES_HEIGHT]
+                            })() */
+        })
+        // Close dialog on X button click.
         $('.' + CH_PREFIX + 'dialog-close').click(function() {
             var $dialog = $(this).closest('.' + CH_PREFIX + 'dialog');
             // Hide dialog
@@ -513,6 +466,41 @@ function ColorHack() {
                 .find('.' + CH_PREFIX + 'toolbar-item-check')
                 .html('');
         });
+
+        // Add color picker selector events.
+        this.components.dialogs.find('.' + CH_PREFIX + 'color-picker_selector').draggable({
+            axis:           'x',
+            containment:    'parent',
+            start:          function(e, ui) { // drag start
+                $(e.target).css('opacity', 1); // want opaque selector while dragging
+            },
+            drag:           function(e, ui) { // during drag
+                if (typeof COLORHACK === 'undefined') return;
+                var $this = $(e.target);
+                var hue = $this.data('color');
+                var colors = ['red', 'green', 'blue', 'alpha'];
+                var colorValues = {};
+                var temp;
+
+                // Get the rgb value for each specific hue
+                for (i = 0; i < colors.length; i++) {
+                    temp = COLORHACK.components['color-pickers'][colors[i]]
+                        .find('.' + CH_PREFIX + 'color-picker_selector').css('left');
+                    colorValues[colors[i]] = temp.substring(0, temp.length - 2);
+                    if (colors[i] === 'alpha') {
+                        colorValues[colors[i]] = colorValues[colors[i]] / 255; // alpha is expressed as decimal 0 <= a <= 1
+                    }
+                }
+                var newVal = $this.css('left');
+                newVal = newVal.substring(0, newVal.length - 2);
+
+                // Perform changes for new hue value
+                _UpdateColor($this, hue, colorValues.red, colorValues.green, colorValues.blue, colorValues.alpha, newVal);
+            },
+            stop:           function(e, ui) { // drag stop
+                $(e.target).css('opacity', '');
+            }
+        })
     }
 
     this.SetDefaults = function() {
