@@ -13,9 +13,11 @@ var BASE_Z_INDEX =                  9000;           // minimum z-index of ColorH
 var DIALOG_COLOR_SCHEMES_HEIGHT =   400;            // color-schemes dialog height
 var DIALOG_COLOR_SCHEMES_WIDTH =    200;            // color-schemes dialog width
 var DIALOG_COLOR_SETTINGS_HEIGHT =  200;            // color-settings dialog height
-var DIALOG_COLOR_SETTINGS_WIDTH =   400;            // color-settings dialog width
+var DIALOG_COLOR_SETTINGS_WIDTH =   350;            // color-settings dialog width
 var DIALOG_ELEMENT_DETAILS_HEIGHT = 300;            // element-details dialog height
 var DIALOG_ELEMENT_DETAILS_WIDTH =  300;            // element-details dialog width
+
+var SLIDE_DURATION =                300;            // time taken to complete slide animations
 
 // ColorHack object
 var COLORHACK;
@@ -174,6 +176,10 @@ function ColorHack() {
             PRIVATE PROPERTIES
      ================================
      */
+
+    // Variables used to count number of clicks.
+    // Used to differentiate between single, double, etc. clicks.
+    var _clickTimer = null, _clicks = 0;
 
     // Dialogs that make up the main UI.
     // Used to generate the menu toolbar options.
@@ -410,11 +416,20 @@ function ColorHack() {
         this.components.icon
             // Clicking the menu icon should toggle visibility of the toolbar.
             .click(function() {
-                var $toolbar = COLORHACK.components.toolbar;
-                if ($toolbar.css('display') === 'none') {
-                    $toolbar.show('slide', { direction: 'down' }, 300);
-                } else {
-                    $toolbar.hide('slide', { direction: 'down' }, 300);
+                // Only allow single clicks.
+                // Otherwise, weird stuff happens when user spam-clicks the menu icon...
+                _clicks++;
+                if (_clicks === 1) {
+                    var $toolbar = COLORHACK.components.toolbar;
+                    if ($toolbar.css('display') === 'none') {
+                        $toolbar.show('slide', { direction: 'down' }, SLIDE_DURATION);
+                    } else {
+                        $toolbar.hide('slide', { direction: 'down' }, SLIDE_DURATION);
+                    }
+                    // Enable sliding again after sliding animation is done.
+                    _clickTimer = setTimeout(function() {
+                        _clicks = 0;
+                    }, SLIDE_DURATION);
                 }
             })
 
@@ -668,11 +683,18 @@ function LoadStylesheet() {
         '.' + CH_CLASS + ' {',
             'font-family:' +            '"HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, sans-serif !important;',
 
-            '-ms-transition:' +         'color .1s linear, background .1s linear, opacity .2s linear;',
-            '-moz-transition:' +        'color .1s linear, background .1s linear, opacity .2s linear;',
-            '-webkit-transition:' +     'color .1s linear, background .1s linear, opacity .2s linear;',
-            '-o-transition:' +          'color .1s linear, background .1s linear, opacity .2s linear;',
-            'transition:' +             'color .1s linear, background .1s linear, opacity .2s linear;',
+            '-ms-transition:' +         'color .1s linear, opacity .2s linear;',
+            '-moz-transition:' +        'color .1s linear, opacity .2s linear;',
+            '-webkit-transition:' +     'color .1s linear, opacity .2s linear;',
+            '-o-transition:' +          'color .1s linear, opacity .2s linear;',
+            'transition:' +             'color .1s linear, opacity .2s linear;',
+        '}',
+        '.' + CH_CLASS + ':not(.' + CH_PREFIX + 'dialog) * {',
+            '-ms-transition:' +         'background .1s linear;',
+            '-moz-transition:' +        'background .1s linear;',
+            '-webkit-transition:' +     'background .1s linear;',
+            '-o-transition:' +          'background .1s linear;',
+            'transition:' +             'background .1s linear;',
         '}',
         'h1.' + CH_CLASS + ',',
         'h2.' + CH_CLASS + ',',
@@ -816,6 +838,15 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close:hover {',
             'opacity:' +            '1;',
         '}',
+        '#' + CH_PREFIX + 'color-schemes input[type=text],',
+        '#' + CH_PREFIX + 'color-settings input[type=text],',
+        '#' + CH_PREFIX + 'element-details input[type=text] {',
+            '-ms-user-select:' +        'text;',
+            '-moz-user-select:' +       'text;',
+            '-webkit-user-select:' +    'text;',
+            '-o-user-select:' +         'text;',
+            'user-select:' +            'text;',
+        '}',
 
         // Color scheme dialog
         '#' + CH_PREFIX + 'color-schemes {',
@@ -831,7 +862,7 @@ function LoadStylesheet() {
 
         '#' + CH_PREFIX + 'color-settings_colors {',
             'margin:' +             '6px 0px;',
-            'padding:' +            '2px 4px;',
+            'padding:' +            '2px 8px;',
             'position:' +           'relative;',
             'z-index:' +            (BASE_Z_INDEX + 11) + ';',
 
@@ -898,9 +929,17 @@ function LoadStylesheet() {
             'opacity:' +            '1;',
         '}',
         '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-textbox {',
-            'height:' +             '16px;',
-            'width:' +              '48px;',
+            'padding:' +            '1px 6px;',
+            'height:' +             '20px;',
+            'width:' +              '26px;',
             'vertical-align:' +     'top;',
+
+            'color:' +              'rgb(240, 240, 240);',
+            'background:' +         'rgb(60, 60, 60);',
+            'border:' +             '1px solid rgb(140, 140, 140);',
+
+            'font-size:' +          '12px;',
+            'letter-spacing:' +     '1px;',
         '}',
 
         // Element details dialog
