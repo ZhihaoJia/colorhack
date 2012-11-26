@@ -56,6 +56,8 @@ function ColorHack() {
         this.components =           {};
 
         // Private methods
+        var _GetPos =               function() {}
+
         var _RgbToHex =             function() {}
         var _HexToRgb =             function() {}
         var _FillGradient =         function() {}
@@ -134,6 +136,7 @@ function ColorHack() {
                         $('<p/>').html('Your browser does not support this feature')
                     )
                     .data('color', color)
+                    .data('selector', '#' + CH_PREFIX + 'color-settings_color-picker_selector-' + color)
                 )
                 .append(
                     $('<div/>', { // color picker selector
@@ -142,6 +145,7 @@ function ColorHack() {
                                     CH_PREFIX + 'color-picker_selector'
                     })
                     .data('color', color)
+                    .data('gradient', '#' + CH_PREFIX + 'color-settings_color-picker_gradient-' + color)
                 )
                 .data('color', color)
             )
@@ -432,6 +436,16 @@ function ColorHack() {
      ================================
      */
 
+    // Returns the position of an element on the page.
+    var _GetPos = function(el) {
+        for (
+            var xPos = 0, yPos = 0;
+            el != null;
+            xPos += el.offsetLeft, yPos += el.offsetTop, el = el.offsetParent
+        );
+        return {x: xPos, y: yPos};
+    }
+
     // Converts RGB color as { r: x, g: y, b: z } to hex color as '#abcdef'.
     var _RgbToHex = function(rgb) {
         return '' +
@@ -557,6 +571,19 @@ function ColorHack() {
 
     // Creates and attaches events for ColorHack elements.
     this.AttachEvents = function() {
+        /* GLOBAL EVENT VARIABLES */
+        var drag = {
+            isDragging:     false,
+            target:         null
+        }
+
+        /* GENERAL */
+        $('body').mouseup(function() {
+            drag.isDragging = false;
+            drag.target = null;
+        })
+
+        /* MENU */
 
         // Icon events
         this.components.icon
@@ -600,7 +627,8 @@ function ColorHack() {
             })
         })
 
-        // Dialog events
+        /* DIALOG */
+
         // Drag dialogs by dialog header.
         this.components.dialogs.draggable({
             //containment:    'body',
@@ -629,11 +657,15 @@ function ColorHack() {
                 .html('');
         });
 
-        // Add color picker selector events.
-        this.components.dialogs.find('.' + CH_PREFIX + 'color-picker_selector').draggable({
+        /* COLOR SETTINGS DIALOG */
+
+        // Dragging the color picker selector changes the active color.
+        this.components['color-settings'].find('.' + CH_PREFIX + 'color-picker_selector').draggable({
             axis:           'x',
             containment:    'parent',
             start:          function(e, ui) { // start draggin
+                drag.isDragging = true;
+                drag.target = e.target;
                 $(e.target).css('opacity', 1); // want opaque selector while dragging
             },
             drag:           function(e, ui) { // while dragging
@@ -655,9 +687,36 @@ function ColorHack() {
                 _SetActiveColor(rgba);
             },
             stop:           function(e, ui) { // stop dragging
+                drag.isDragging = false;
+                drag.target = null;
                 $(e.target).css('opacity', '');
             }
-        })
+        });
+
+        // Dragging along color gradient starts color selector drag.
+        this.components['color-settings'].find('.' + CH_PREFIX + 'color-picker_gradient')
+            .mousedown(function(e) {
+                // If statement to handle event bubbling.
+                if (this.id === e.target.id) {
+                    drag.isDragging = true;
+                    drag.target = e.target;
+
+                    $gradient = $(e.target);
+                    $selector = $($gradient.data('selector'));
+                    var xPos = e.pageX - _GetPos(e.target).x - 2; // 2 to account for selector width
+
+                    // Move selector to align with mouse by x (horizontal) position.
+                    $selector.css('left', xPos);
+
+                    // Trigger the corresponding selector drag.
+                    $($(e.target).data('selector')).trigger(e);
+                    drag.target = $selector.get(0);
+                }
+            })
+            .mouseup(function(e) {
+                drag.isDragging = false;
+                drag.target = null;
+            })
     }
 
     this.SetDefaults = function() {
