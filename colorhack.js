@@ -61,6 +61,7 @@ function ColorHack() {
         var _RgbToHex =             function() {}
         var _HexToRgb =             function() {}
         var _FillGradient =         function() {}
+        var _UpdateActiveColor =    function() {}
         var _SetActiveColor =       function() {}
 
         // Public methods
@@ -500,7 +501,27 @@ function ColorHack() {
     }
 
     // Performs all updates needed when changing the active color in the color settings dialog.
-    // Note that changedVal is equal to one of redVal, greenVal, or blueVal.
+    // Uses all color picker selector positions.
+    var _UpdateActiveColor = function() {
+        var colors = ['red', 'green', 'blue', 'alpha'];
+        var rgba = {};
+
+        // Get the rgb value for each specific hue
+        for (i = 0; i < colors.length; i++) {
+            // RGB value is based off of selector's position in the color picker.
+            rgba[colors[i]] = COLORHACK.components['color-pickers'][colors[i]]
+                .find('.' + CH_PREFIX + 'color-picker_selector').css('left');
+            rgba[colors[i]] = rgba[colors[i]].substring(0, rgba[colors[i]].length - 2);
+
+            if (colors[i] === 'alpha') {
+                rgba[colors[i]] = Math.floor(rgba[colors[i]] * 100 / 255);
+            }
+        }
+
+        _SetActiveColor(rgba);
+    }
+
+    // Performs all updates needed to change the active color, based on the input rgba object.
     var _SetActiveColor = function(rgba) {
         var hue = 'rgba(' + rgba.red + ', ' + rgba.green + ', ' + rgba.blue + ', 1)';
         var color = 'rgba(' + rgba.red + ', ' + rgba.green + ', ' + rgba.blue + ', ' + rgba.alpha/100 + ')';
@@ -669,22 +690,7 @@ function ColorHack() {
                 $(e.target).css('opacity', 1); // want opaque selector while dragging
             },
             drag:           function(e, ui) { // while dragging
-                var colors = ['red', 'green', 'blue', 'alpha'];
-                var rgba = {};
-
-                // Get the rgb value for each specific hue
-                for (i = 0; i < colors.length; i++) {
-                    // RGB value is based off of selector's position in the color picker.
-                    rgba[colors[i]] = COLORHACK.components['color-pickers'][colors[i]]
-                        .find('.' + CH_PREFIX + 'color-picker_selector').css('left');
-                    rgba[colors[i]] = rgba[colors[i]].substring(0, rgba[colors[i]].length - 2);
-
-                    if (colors[i] === 'alpha') {
-                        rgba[colors[i]] = Math.floor(rgba[colors[i]] * 100 / 255);
-                    }
-                }
-
-                _SetActiveColor(rgba);
+                _UpdateActiveColor();
             },
             stop:           function(e, ui) { // stop dragging
                 drag.isDragging = false;
@@ -707,9 +713,13 @@ function ColorHack() {
 
                     // Move selector to align with mouse by x (horizontal) position.
                     $selector.css('left', xPos);
+                    //
+                    // Update the active color based on new selector position.
+                    _UpdateActiveColor();
 
                     // Trigger the corresponding selector drag.
                     $($(e.target).data('selector')).trigger(e);
+
                     drag.target = $selector.get(0);
                 }
             })
