@@ -937,7 +937,11 @@ function LoadStylesheet() {
         // Possibly a bug in jQuery UI (checks for other position styling, so should not overwrite it).
         // Have not been able to isolate exact cause in jq, and have not been able to reproduce issue in simpler test cases.
             'position:' +               'fixed !important;',
-
+        '}',
+        '#' + CH_PREFIX + 'menu,',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header,',
+        '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header,',
+        '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header {',
             '-ms-user-select:' +        'none;',
             '-moz-user-select:' +       'none;',
             '-webkit-user-select:' +    'none;',
@@ -1061,14 +1065,15 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close:hover {',
             'opacity:' +            '1;',
         '}',
-        '#' + CH_PREFIX + 'color-schemes input[type=text],',
-        '#' + CH_PREFIX + 'color-settings input[type=text],',
-        '#' + CH_PREFIX + 'element-details input[type=text] {',
-            '-ms-user-select:' +        'text;',
-            '-moz-user-select:' +       'text;',
-            '-webkit-user-select:' +    'text;',
-            '-o-user-select:' +         'text;',
-            'user-select:' +            'text;',
+
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-label,',
+        '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'color-label,',
+        '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'color-label {',
+            '-ms-user-select:' +        'none;',
+            '-moz-user-select:' +       'none;',
+            '-webkit-user-select:' +    'none;',
+            '-o-user-select:' +         'none;',
+            'user-select:' +            'none;',
         '}',
 
         // Color scheme dialog
