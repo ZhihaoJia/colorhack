@@ -742,6 +742,7 @@ function ColorHack() {
             .keypress(function(e) {
                 var key = e.keyCode || e.which;
                 var isHex = (e.target.id.indexOf('hex') !== -1) ? true : false;
+                var isAlpha = (e.target.id.indexOf('alpha') !== -1) ? true : false;
 
                 // TODO: handle copy-paste, ctrl/cmd hold cases
                 // TODO: treat textbox lose focus the same way as pressing enter
@@ -749,21 +750,41 @@ function ColorHack() {
                 // If key pressed is enter, update active color.
                 if (key === 13) {                   // enter
                     if (isHex) {
-                        var rgb = _HexToRgb(e.target.value.toLowerCase());
+                        // Get the textbox input value as a hex color value.
+                        var val = e.target.value;
+                        if (val.length === 3)
+                            val =
+                                val.substring(0, 1) + val.substring(0, 1) +
+                                val.substring(1, 2) + val.substring(1, 2) +
+                                val.substring(2, 3) + val.substring(2, 3);
+                        else if (val.length !== 6) // note that length <= 6
+                            val = val + Array(6 - val.length + 1).join('0');
+
+                        var rgb = _HexToRgb(val.toLowerCase());
                         var $gradients = COLORHACK.components['color-picker_gradients'];
 
                         // Set selector positions.
                         $($gradients.red.data('selector')).css('left', (rgb.r > 255 ? 255 : rgb.r) + 'px');
                         $($gradients.green.data('selector')).css('left', (rgb.g > 255 ? 255 : rgb.g) + 'px');
                         $($gradients.blue.data('selector')).css('left', (rgb.b > 255 ? 255 : rgb.b) + 'px');
+                        $($gradients.alpha.data('selector')).css('left', '255px'); // hex colors do not have alpha channel
 
                         _UpdateActiveColor();
                         return true;
                     } else {
+                        // Get the textbox input value as an integer.
                         var val = parseInt(e.target.value.replace(/\D/g, ''), 10); // convert to integer
                         $target = $(e.target);
 
-                        $($target.data('selector')).css('left', val + 'px');
+                        // Set selector position.
+                        if (val > 255 && !isAlpha) {
+                            val = 255;
+                            $($target.data('selector')).css('left', val + 'px');
+                        } else if (val > 100 && isAlpha) {
+                            val = 100;
+                            $($target.data('selector')).css('left', (val / 100 * 255) + 'px');
+                        }
+
                         _UpdateActiveColor();
                         return true;
                     }
