@@ -180,6 +180,8 @@ function ColorHack() {
     var regexDec =      /^[0-9]*$/;
     var regexHex =      /^[a-fA-F0-9]*$/
 
+    var _isCtrlPressed = false;
+
     // Dialogs that make up the main UI.
     // Used to generate the menu toolbar options.
     var _dialogs = [
@@ -560,6 +562,48 @@ function ColorHack() {
         );
     }
 
+    // Submits color value entered into color picker textbox.
+    var _SubmitColorTextbox = function(target, isHex, isAlpha) {
+        if (isHex) {
+            // Get the textbox input value as a hex color value.
+            var val = target.value.substring(0, 6); // value may be too long after copy-paste
+            if (val.length === 3)
+                val =
+                    val.substring(0, 1) + val.substring(0, 1) +
+                    val.substring(1, 2) + val.substring(1, 2) +
+                    val.substring(2, 3) + val.substring(2, 3);
+            else if (val.length !== 6) // note that length <= 6
+                val = val + Array(6 - val.length + 1).join('0');
+
+            var rgb = _HexToRgb(val.toLowerCase());
+            var $gradients = COLORHACK.components['color-picker_gradients'];
+
+            // Set selector positions.
+            $($gradients.red.data('selector')).css('left', (rgb.r > 255 ? 255 : rgb.r) + 'px');
+            $($gradients.green.data('selector')).css('left', (rgb.g > 255 ? 255 : rgb.g) + 'px');
+            $($gradients.blue.data('selector')).css('left', (rgb.b > 255 ? 255 : rgb.b) + 'px');
+            $($gradients.alpha.data('selector')).css('left', '255px'); // hex colors do not have alpha channel
+
+            _UpdateActiveColor();
+        } else {
+            // Get the textbox input value as an integer.
+            var val = parseInt(target.value.replace(/\D/g, '').substring(0, 3), 10); // convert to integer
+            if (val > 255 && !isAlpha)
+                val = 255;
+            else if (val > 100 && isAlpha)
+                val = 100;
+
+            // Set selector position.
+            $target = $(target);
+            if (isAlpha)
+                $($target.data('selector')).css('left', (val / 100 * 255) + 'px');
+            else
+                $($target.data('selector')).css('left', val + 'px');
+
+            _UpdateActiveColor();
+        }
+    }
+
     /*
      ================================
               PUBLIC METHODS
@@ -744,54 +788,18 @@ function ColorHack() {
                 var isHex = (e.target.id.indexOf('hex') !== -1) ? true : false;
                 var isAlpha = (e.target.id.indexOf('alpha') !== -1) ? true : false;
 
-                // TODO: handle copy-paste, ctrl/cmd hold cases
-                // TODO: treat textbox lose focus the same way as pressing enter
+                // Allow keypress if ctrl/cmd is being pressed (e.g. for copy-paste action).
+                if (_isCtrlPressed)
+                    return true;
 
-                // If key pressed is enter, update active color.
+                // If key pressed is enter, submit color value.
                 if (key === 13) {                   // enter
-                    if (isHex) {
-                        // Get the textbox input value as a hex color value.
-                        var val = e.target.value;
-                        if (val.length === 3)
-                            val =
-                                val.substring(0, 1) + val.substring(0, 1) +
-                                val.substring(1, 2) + val.substring(1, 2) +
-                                val.substring(2, 3) + val.substring(2, 3);
-                        else if (val.length !== 6) // note that length <= 6
-                            val = val + Array(6 - val.length + 1).join('0');
-
-                        var rgb = _HexToRgb(val.toLowerCase());
-                        var $gradients = COLORHACK.components['color-picker_gradients'];
-
-                        // Set selector positions.
-                        $($gradients.red.data('selector')).css('left', (rgb.r > 255 ? 255 : rgb.r) + 'px');
-                        $($gradients.green.data('selector')).css('left', (rgb.g > 255 ? 255 : rgb.g) + 'px');
-                        $($gradients.blue.data('selector')).css('left', (rgb.b > 255 ? 255 : rgb.b) + 'px');
-                        $($gradients.alpha.data('selector')).css('left', '255px'); // hex colors do not have alpha channel
-
-                        _UpdateActiveColor();
-                        return true;
-                    } else {
-                        // Get the textbox input value as an integer.
-                        var val = parseInt(e.target.value.replace(/\D/g, ''), 10); // convert to integer
-                        $target = $(e.target);
-
-                        // Set selector position.
-                        if (val > 255 && !isAlpha) {
-                            val = 255;
-                            $($target.data('selector')).css('left', val + 'px');
-                        } else if (val > 100 && isAlpha) {
-                            val = 100;
-                            $($target.data('selector')).css('left', (val / 100 * 255) + 'px');
-                        }
-
-                        _UpdateActiveColor();
-                        return true;
-                    }
+                    return _SubmitColorTextbox(e.target, isHex, isAlpha);
                 }
 
                 // Allow special characters.
                 if ((key === 8 || key === 46) ||    // backspace, delete
+                    (key === 9) ||                    // tab key
                     (key > 36 && key < 41)) {       // arrow keys
                     return true;
                 }
@@ -807,11 +815,26 @@ function ColorHack() {
                 // Enforce max character limit.
                 if ((isHex && e.target.value.length >= 6) ||
                     (!isHex && e.target.value.length >=3)) {
-                    // TODO: if text selected, allow keypress
+                    // Allow additional character input if text is selected (highlighted text is replaced).
+                    if (e.target.selectionStart !== e.target.selectionEnd)
+                        return true;
                     if (e.preventDefault) e.preventDefault();
                     return false;
                 }
             })
+            .keydown(function(e) {
+                if (e.ctrlKey || e.metaKey) // if key pressed is ctrl or cmd (Macs) key
+                    _isCtrlPressed = true;
+            })
+            .keyup(function(e) {
+                if (_isCtrlPressed)
+                    _isCtrlPressed = false;
+            })
+            .blur(function(e) {
+                var isHex = (e.target.id.indexOf('hex') !== -1) ? true : false;
+                var isAlpha = (e.target.id.indexOf('alpha') !== -1) ? true : false;
+                _SubmitColorTextbox(e.target, isHex, isAlpha);
+            });
     }
 
     this.SetDefaults = function() {
