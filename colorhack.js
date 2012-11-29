@@ -151,13 +151,15 @@ function ColorHack() {
                 .data('color', color)
             )
             .append(
-                $('<input/>', { // textbox for color picker - numerical value for color intensity
+                $('<input/>', { // textbox for color picker
                     id:         CH_PREFIX + 'color-settings_color-textbox-' + color,
                     'class':    CH_CLASS + ' ' +
                                 CH_PREFIX + 'color-textbox',
                     name:       CH_PREFIX + 'color-textbox-' + color,
                     type:       'text',
                 })
+                .data('color', color)
+                .data('selector', '#' + CH_PREFIX + 'color-settings_color-picker_selector-' + color)
             )
         return colorPicker;
     }
@@ -171,6 +173,12 @@ function ColorHack() {
     // Variables used to count number of clicks.
     // Used to differentiate between single, double, etc. clicks.
     var _clickTimer = null, _clicks = 0;
+
+    // Regex variables for input validation and filtering.
+    var regexAlpha =    /^[a-zA-Z]*$/;
+    var regexAlphaNum = /^[a-zA-Z0-9]*$/
+    var regexDec =      /^[0-9]*$/;
+    var regexHex =      /^[a-fA-F0-9]*$/
 
     // Dialogs that make up the main UI.
     // Used to generate the menu toolbar options.
@@ -726,6 +734,62 @@ function ColorHack() {
             .mouseup(function(e) {
                 drag.isDragging = false;
                 drag.target = null;
+            });
+
+        // Restrict characters accepted in the textboxes (input validation).
+        // Allows color values to be set from the textboxes.
+        this.components['color-settings'].find('.' + CH_PREFIX + 'color-textbox, .' + CH_PREFIX + 'color-textbox-hex')
+            .keypress(function(e) {
+                var key = e.keyCode || e.which;
+                var isHex = (e.target.id.indexOf('hex') !== -1) ? true : false;
+
+                // TODO: handle copy-paste, ctrl/cmd hold cases
+                // TODO: treat textbox lose focus the same way as pressing enter
+
+                // If key pressed is enter, update active color.
+                if (key === 13) {                   // enter
+                    if (isHex) {
+                        var rgb = _HexToRgb(e.target.value.toLowerCase());
+                        var $gradients = COLORHACK.components['color-picker_gradients'];
+
+                        // Set selector positions.
+                        $($gradients.red.data('selector')).css('left', (rgb.r > 255 ? 255 : rgb.r) + 'px');
+                        $($gradients.green.data('selector')).css('left', (rgb.g > 255 ? 255 : rgb.g) + 'px');
+                        $($gradients.blue.data('selector')).css('left', (rgb.b > 255 ? 255 : rgb.b) + 'px');
+
+                        _UpdateActiveColor();
+                        return true;
+                    } else {
+                        var val = parseInt(e.target.value.replace(/\D/g, ''), 10); // convert to integer
+                        $target = $(e.target);
+
+                        $($target.data('selector')).css('left', val + 'px');
+                        _UpdateActiveColor();
+                        return true;
+                    }
+                }
+
+                // Allow special characters.
+                if ((key === 8 || key === 46) ||    // backspace, delete
+                    (key > 36 && key < 41)) {       // arrow keys
+                    return true;
+                }
+
+                // Allow numbers.
+                key = String.fromCharCode(key);
+                if ((isHex && !regexHex.test(key)) ||
+                    (!isHex && !regexDec.test(key))) {
+                    if (e.preventDefault) e.preventDefault();
+                    return false;
+                }
+
+                // Enforce max character limit.
+                if ((isHex && e.target.value.length >= 6) ||
+                    (!isHex && e.target.value.length >=3)) {
+                    // TODO: if text selected, allow keypress
+                    if (e.preventDefault) e.preventDefault();
+                    return false;
+                }
             })
     }
 
