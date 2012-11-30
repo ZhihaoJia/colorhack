@@ -4,6 +4,9 @@
  ================================
  */
 
+/* Settings */
+// Safe to change.
+
 // Modify these values to resolve conflicts with the page's elements.
 var CH_PREFIX =                     'colorhack_';   // HTML id prefix for naming ColorHack elements
 var CH_CLASS =                      'colorhack';    // HTML class to identify ColorHack elements
@@ -18,6 +21,14 @@ var DIALOG_ELEMENT_DETAILS_HEIGHT = 300;            // element-details dialog he
 var DIALOG_ELEMENT_DETAILS_WIDTH =  300;            // element-details dialog width
 
 var SLIDE_DURATION =                300;            // time taken to complete slide animations
+
+/* Constants used by ColorHack */
+// Not safe to change.
+
+// Type enumeration of color scheme color types (used in color schemes)
+var COLOR_TYPE_FOREGROUND =         1;
+var COLOR_TYPE_BACKGROUND =         2;
+var COLOR_TYPE_BORDER =             3;
 
 // ColorHack object
 var COLORHACK;
@@ -38,38 +49,42 @@ function ColorHack() {
      ================================
      */
 
-        // Private properties
-        var _dialogs =              [];
+    // Private properties
+    var _dialogs =              [];
 
-        var _menu =                 {};
-        var _toolbar =              {};
-        var _icon =                 {};
+    var _menu =                 {};
+    var _toolbar =              {};
+    var _icon =                 {};
 
-        var _colorSchemes =         {};
+    var _colorSchemes =         {};
 
-        var _colorSettings =        {};
-        var _colorSettingsColors =  {};
+    var _colorSettings =        {};
+    var _colorSettingsColors =  {};
 
-        var _elementDetails =       {};
+    var _elementDetails =       {};
 
-        // Public properties
-        this.components =           {};
+    // Public properties
+    this.components =           {};
+    this.colorSchemes =         [];
 
-        // Private methods
-        var _GetPos =               function() {}
+    // Private methods
+    var _GetPos =               function() {}
+    var _RgbToHex =             function() {}
+    var _HexToRgb =             function() {}
 
-        var _RgbToHex =             function() {}
-        var _HexToRgb =             function() {}
-        var _FillGradient =         function() {}
-        var _UpdateActiveColor =    function() {}
-        var _SetActiveColor =       function() {}
+    var _AddColorScheme =       function() {}
+    var _UpdateColorSchemes =   function() {}
 
-        // Public methods
-        this.BuildDialogs =         function() {}
-        this.SetupColorPickers =    function() {}
-        this.AttachEvents =         function() {}
-        this.SetDefaults =          function() {}
-        this.Init =                 function() {}
+    var _FillGradient =         function() {}
+    var _UpdateActiveColor =    function() {}
+    var _SetActiveColor =       function() {}
+
+    // Public methods
+    this.BuildDialogs =         function() {}
+    this.SetupColorPickers =    function() {}
+    this.AttachEvents =         function() {}
+    this.SetDefaults =          function() {}
+    this.Init =                 function() {} 
 
     /*
      ================================
@@ -397,7 +412,7 @@ function ColorHack() {
      ================================
      */
     
-    // Primary components used by ColorHack.
+    // Primary UI components used by ColorHack.
     this.components = {
         menu:                       _menu,
         icon:                       _icon,
@@ -441,6 +456,20 @@ function ColorHack() {
         'element-details':          _elementDetails
     };
 
+    // Contains all the color schemes tracked by ColorHack.
+    // Each color scheme is an object of the following form:
+    //  {
+    //      name:       string
+    //      members:    [ {
+    //              name:   string
+    //              el:     element
+    //          }, ... ]
+    //      colors:     [ {
+    //              type:   integer                                 // enumeration, describes type of color (e.g. color, background, ...)
+    //              value:  { r: integer, g: integer, b: integer }  // rgb object
+    //          }, ... ]
+    //  }
+    this.colorSchemes = [];
     /*
      ================================
               PRIVATE METHODS
@@ -478,6 +507,14 @@ function ColorHack() {
         } : null;
     }
 
+    // Adds a single color scheme to Color Schemes dialog.
+    var _AddColorScheme = function(colorScheme) {
+    }
+
+    // Updates Color Schemes dialog based on internal color schemes in ColorHack object.
+    var _UpdateColorSchemes = function() {
+    }
+
     // Fills a given color gradient for a color picker based on input colors.
     var _FillGradient = function(colorGradients, color, startHue, stopHue) {
         // Get color picker canvas and context.
@@ -510,27 +547,6 @@ function ColorHack() {
         context.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Performs all updates needed when changing the active color in the color settings dialog.
-    // Uses all color picker selector positions.
-    var _UpdateActiveColor = function() {
-        var colors = ['red', 'green', 'blue', 'alpha'];
-        var rgba = {};
-
-        // Get the rgb value for each specific hue
-        for (i = 0; i < colors.length; i++) {
-            // RGB value is based off of selector's position in the color picker.
-            rgba[colors[i]] = COLORHACK.components['color-pickers'][colors[i]]
-                .find('.' + CH_PREFIX + 'color-picker_selector').css('left');
-            rgba[colors[i]] = rgba[colors[i]].substring(0, rgba[colors[i]].length - 2);
-
-            if (colors[i] === 'alpha') {
-                rgba[colors[i]] = Math.floor(rgba[colors[i]] * 100 / 255);
-            }
-        }
-
-        _SetActiveColor(rgba);
-    }
-
     // Performs all updates needed to change the active color, based on the input rgba object.
     var _SetActiveColor = function(rgba) {
         var hue = 'rgba(' + rgba.red + ', ' + rgba.green + ', ' + rgba.blue + ', 1)';
@@ -560,6 +576,27 @@ function ColorHack() {
             'rgba(' + rgba.red + ', ' + rgba.green + ', ' + rgba.blue + ', 0)',
             hue
         );
+    }
+
+    // Performs all updates needed when changing the active color in the color settings dialog.
+    // Uses all color picker selector positions.
+    var _UpdateActiveColor = function() {
+        var colors = ['red', 'green', 'blue', 'alpha'];
+        var rgba = {};
+
+        // Get the rgb value for each specific hue
+        for (i = 0; i < colors.length; i++) {
+            // RGB value is based off of selector's position in the color picker.
+            rgba[colors[i]] = COLORHACK.components['color-pickers'][colors[i]]
+                .find('.' + CH_PREFIX + 'color-picker_selector').css('left');
+            rgba[colors[i]] = rgba[colors[i]].substring(0, rgba[colors[i]].length - 2);
+
+            if (colors[i] === 'alpha') {
+                rgba[colors[i]] = Math.floor(rgba[colors[i]] * 100 / 255);
+            }
+        }
+
+        _SetActiveColor(rgba);
     }
 
     // Submits color value entered into color picker textbox.
@@ -875,6 +912,21 @@ function ColorHack() {
             'rgba(255, 255, 255, 0)',
             'rgba(255, 255, 255, 1)'
         );
+
+        // Set up default first color scheme
+        this.colorSchemes.push({
+            name:       "Color Scheme 1",
+            members:    [],
+            colors:     [
+                { type:     COLOR_TYPE_FOREGROUND,
+                  value:    { r: 0, g: 0, b: 0 } },
+                { type:     COLOR_TYPE_BACKGROUND,
+                  value:    { r: 255, g: 255, b: 255 } },
+                { type:     COLOR_TYPE_BORDER,
+                  value:    { r: 0, g: 0, b: 0 } }
+            ]
+        });
+        _UpdateColorSchemes();
     }
 
     // Sets up ColorHack on the page.
@@ -1174,6 +1226,8 @@ function LoadStylesheet() {
             'opacity:' +            '1;',
         '}',
 
+        /* Want everything but textboxes and editable elements to be non-selectable (highlight-able)
+         * Haven't been able to get it working either by selecting specific elements or using :not() */
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-label,',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'color-label,',
         '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'color-label {',
@@ -1202,16 +1256,20 @@ function LoadStylesheet() {
             'position:' +           'relative;',
             'z-index:' +            (BASE_Z_INDEX + 11) + ';',
 
-            'background:' +         'rgb(90, 90, 90);',
-
-            '-ms-box-shadow:' +     '0 0 16px 4px rgb(70, 70, 70) inset;',
-            '-moz-box-shadow:' +    '0 0 16px 4px rgb(70, 70, 70) inset;',
-            '-webkit-box-shadow:' + '0 0 16px 4px rgb(70, 70, 70) inset;',
-            '-o-box-shadow:' +      '0 0 16px 4px rgb(70, 70, 70) inset;',
-            'box-shadow:' +         '0 0 16px 4px rgb(70, 70, 70) inset;',
+            'background:' +         'rgb(100, 100, 100);',
+            'background:' +         '-ms-linear-gradient(top, rgb(110, 110, 110) 0%, rgb(90, 90, 90) 100%);',
+            'background:' +         '-moz-linear-gradient(top, rgb(110, 110, 110) 0%, rgb(90, 90, 90) 100%);',
+            'background:' +         '-webkit-linear-gradient(top, rgb(110, 110, 110) 0%, rgb(90, 90, 90) 100%);',
+            'background:' +         '-o-linear-gradient(top, rgb(110, 110, 110) 0%, rgb(90, 90, 90) 100%);',
+            'background:' +         'linear-gradient(top, rgb(110, 110, 110) 0%, rgb(90, 90, 90) 100%);',
         '}',
         '#' + CH_PREFIX + 'color-settings_colors:hover {',
-            'background:' +         'rgb(100, 100, 100);',
+            'background:' +         'rgb(110, 110, 110);',
+            'background:' +         '-ms-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
+            'background:' +         '-moz-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
+            'background:' +         '-webkit-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
+            'background:' +         '-o-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
+            'background:' +         'linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
         '}',
 
         '#' + CH_PREFIX + 'color-settings_colors #' + CH_PREFIX + 'color-settings_color-components {',
@@ -1259,13 +1317,13 @@ function LoadStylesheet() {
             'margin:' +             '0 8px;',
             'display:' +            'inline-block;',
             'height:' +             '26px;',
-            'width:' +              '265px;', // width of gradient + width of selector - 1
+            'width:' +              '265px;', // width of gradient + width of selector
             'position:' +           'relative;',
             'z-index:' +            (BASE_Z_INDEX + 12) + ';',
         '}',
         '#' + CH_PREFIX + 'color-settings_colors .' + CH_PREFIX + 'color-picker_gradient {',
             'position:' +           'absolute;',
-            'left:' +               '5px;', // half width of selector
+            'left:' +               '4px;', // proportional to selector width
             'z-index:' +            (BASE_Z_INDEX + 13) + ';',
 
             'border:' +             '1px solid rgb(140, 140, 140);',
