@@ -50,41 +50,42 @@ function ColorHack() {
      */
 
     // Private properties
-    var _dialogs =              [];
+    var _dialogs =                  [];
 
-    var _menu =                 {};
-    var _toolbar =              {};
-    var _icon =                 {};
+    var _menu =                     {};
+    var _toolbar =                  {};
+    var _icon =                     {};
 
-    var _colorSchemes =         {};
+    var _colorSchemes =             {};
 
-    var _colorSettings =        {};
-    var _colorSettingsColors =  {};
+    var _colorSettings =            {};
+    var _colorSettingsColors =      {};
 
-    var _elementDetails =       {};
+    var _elementDetails =           {};
 
     // Public properties
-    this.components =           {};
-    this.colorSchemes =         [];
+    this.components =               {};
+    this.colorSchemes =             [];
 
     // Private methods
-    var _GetPos =               function() {}
-    var _RgbToHex =             function() {}
-    var _HexToRgb =             function() {}
+    var _GetPos =                   function() {}
+    var _RgbToHex =                 function() {}
+    var _HexToRgb =                 function() {}
 
-    var _AddColorScheme =       function() {}
-    var _UpdateColorSchemes =   function() {}
+    var _AddColorSchemeMembers =    function() {}
+    var _AddColorSchemes =          function() {}
+    var _UpdateColorSchemes =       function() {}
 
-    var _FillGradient =         function() {}
-    var _UpdateActiveColor =    function() {}
-    var _SetActiveColor =       function() {}
+    var _FillGradient =             function() {}
+    var _UpdateActiveColor =        function() {}
+    var _SetActiveColor =           function() {}
 
     // Public methods
-    this.BuildDialogs =         function() {}
-    this.SetupColorPickers =    function() {}
-    this.AttachEvents =         function() {}
-    this.SetDefaults =          function() {}
-    this.Init =                 function() {} 
+    this.BuildDialogs =             function() {}
+    this.SetupColorPickers =        function() {}
+    this.AttachEvents =             function() {}
+    this.SetDefaults =              function() {}
+    this.Init =                     function() {} 
 
     /*
      ================================
@@ -286,6 +287,13 @@ function ColorHack() {
         .append(
             _CreateDialogHeader('Color Schemes')
         )
+        .append(
+            $('<div/>', {
+                id:         CH_PREFIX + 'color-schemes_schemes',
+                'class':    CH_CLASS + ' ' +
+                            CH_PREFIX + 'color-schemes'
+            })
+        )
     ;
 
     /*
@@ -424,6 +432,7 @@ function ColorHack() {
                                         .add(_elementDetails),
 
         'color-schemes':            _colorSchemes,
+        'color-schemes_schemes':    _colorSchemes.find('.' + CH_PREFIX + 'color-schemes_schemes'),
 
         'color-settings':           _colorSettings,
         'color-settings_colors':    _colorSettingsColors,
@@ -470,6 +479,7 @@ function ColorHack() {
     //          }, ... ]
     //  }
     this.colorSchemes = [];
+
     /*
      ================================
               PRIVATE METHODS
@@ -507,12 +517,97 @@ function ColorHack() {
         } : null;
     }
 
-    // Adds a single color scheme to Color Schemes dialog.
-    var _AddColorScheme = function(colorScheme) {
+    // Adds one or more members to the input color scheme.
+    // Input color scheme is a JQ DOM element, members is an array of member objects.
+    var _AddColorSchemeMembers = function(scheme, members) {
+        var $newMembers = $();
+            for (i = 0; i < members.length; i++) {
+                $newMembers = $newMembers.add(
+                    $('<div/>', {
+                        'class':    CH_CLASS + ' ' +
+                                    CH_PREFIX + 'color-scheme_member'
+                    })
+                    .append(
+                        $('<span/>', {
+                            'class':    CH_CLASS + ' ' +
+                                        CH_PREFIX + 'color-scheme_member_name'
+                        })
+                        .html(members[i].name)
+                    )
+                    .append(
+                        $('<span/>', {
+                            'class':    CH_PREFIX + ' ' +
+                                        CH_PREFIX + 'color-scheme_member_delete'
+                        })
+                    )
+                );
+            }
+        scheme.append($newMembers);
+    }
+
+    // Adds one or more color schemes to Color Schemes dialog.
+    // Input color schemes is an array of color scheme objects.
+    var _AddColorSchemes = function(schemes) {
+        var $newSchemes = $();
+        for (i = 0; i < schemes.length; i++) {
+            $newSchemes = $newSchemes.add(
+                $('<div/>', {
+                    'class':    CH_CLASS + ' ' +
+                                CH_PREFIX + 'color-scheme'
+                })
+                .append(
+                    $('<h3/>', {
+                        'class':    CH_CLASS + ' ' +
+                                    CH_PREFIX + 'color-scheme_name'
+                    })
+                    .append(
+                        $('<span/>', {
+                            'class':    CH_CLASS + ' ' +
+                                        CH_PREFIX + 'color-scheme_toogle'
+                        })
+                        .html('&minus;')
+                    )
+                    .append(
+                        $('<span/>', {
+                            'class':    CH_CLASS + ' ' +
+                                        CH_PREFIX + 'color-scheme_name'
+                        })
+                        .html(schemes[i].name)
+                    )
+                    .append(
+                        $('<span/>', {
+                            'class':    CH_CLASS + ' ' +
+                                        CH_PREFIX + 'color-scheme_add'
+                        })
+                        .html('+')
+                    )
+                    .append(
+                        $('<span/>', {
+                            'class':    CH_CLASS + ' ' +
+                                        CH_PREFIX + 'color-scheme_delete'
+                        })
+                        .html('&times;')
+                    )
+                )
+                .append(
+                    $('<div/>', {
+                        'class':    CH_CLASS + ' ' +
+                                    CH_PREFIX + 'color-scheme_members'
+                    })
+                )
+            )
+            // Add member DOM elements to the color scheme.
+            _AddColorSchemeMembers($newSchemes.eq(i), schemes[i].members);
+        }
+        COLORHACK.components['color-schemes'].find('#' + CH_PREFIX + 'color-schemes_schemes')
+            .append($newSchemes);
     }
 
     // Updates Color Schemes dialog based on internal color schemes in ColorHack object.
     var _UpdateColorSchemes = function() {
+        var $colorSchemes = COLORHACK.components['color-schemes'].find('#' + CH_PREFIX + 'color-schemes_schemes');
+        $colorSchemes.empty();
+        _AddColorSchemes(COLORHACK.colorSchemes);
     }
 
     // Fills a given color gradient for a color picker based on input colors.
@@ -916,7 +1011,11 @@ function ColorHack() {
         // Set up default first color scheme
         this.colorSchemes.push({
             name:       "Color Scheme 1",
-            members:    [],
+            //members:    [],
+            members:    [ // start with one element for testing
+                { name:     'body',
+                  el:       $('body').get(0) }
+            ],
             colors:     [
                 { type:     COLOR_TYPE_FOREGROUND,
                   value:    { r: 0, g: 0, b: 0 } },
