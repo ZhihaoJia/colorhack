@@ -540,7 +540,7 @@ function ColorHack() {
                                         CH_PREFIX + 'inline-button ' +
                                         CH_PREFIX + 'color-scheme_add'
                         })
-                        .html('+')
+                        .html('<span>+</span>')
                     )
                     .append(
                         $('<span/>', {
@@ -548,7 +548,7 @@ function ColorHack() {
                                         CH_PREFIX + 'inline-button ' +
                                         CH_PREFIX + 'color-scheme_delete'
                         })
-                        .html('&times;')
+                        .html('<span>&minus;</span>')
                     )
                 );
             }
@@ -576,7 +576,9 @@ function ColorHack() {
                                         CH_PREFIX + 'inline-button ' +
                                         CH_PREFIX + 'color-scheme_toggle'
                         })
-                        .html('&minus;')
+                        // #x25b6 = black right triangle arrow
+                        // #x25bc = black down triangle arrow
+                        .html('<span>&#x25bc;</span>')
                     )
                     .append(
                         $('<span/>', {
@@ -591,7 +593,7 @@ function ColorHack() {
                                         CH_PREFIX + 'inline-button ' +
                                         CH_PREFIX + 'color-scheme_add'
                         })
-                        .html('+')
+                        .html('<span>+</span>')
                     )
                     .append(
                         $('<span/>', {
@@ -599,7 +601,7 @@ function ColorHack() {
                                         CH_PREFIX + 'inline-button ' +
                                         CH_PREFIX + 'color-scheme_delete'
                         })
-                        .html('&times;')
+                        .html('<span>&minus;</span>')
                     )
                 )
                 .append(
@@ -1234,7 +1236,8 @@ function LoadStylesheet() {
         '}',
 
         '.' + CH_CLASS + '.' + CH_PREFIX + 'inline-button {',
-            'height:' +                 '12px;',
+            'height:' +                 '14px;',
+            'width:' +                  '14px;',
             'display:' +                'inline-block;',
             'padding:' +                '0 1px;',
 
@@ -1242,13 +1245,18 @@ function LoadStylesheet() {
 
             'font-size:' +              '16px;',
             'font-weight:' +            'bold;',
-            'line-height:' +            '8px;',
+            'line-height:' +            '10px;',
+            'text-align:' +             'center;',
 
             '-ms-transition:' +         'background 0s linear;',
             '-moz-transition:' +        'background 0s linear;',
             '-webkit-transition:' +     'background 0s linear;',
             '-o-transition:' +          'background 0s linear;',
             'transition:' +             'background 0s linear;',
+        '}',
+        '.' + CH_CLASS + '.' + CH_PREFIX + 'inline-button span {',
+            'display:' +                'inline-block;',
+            'margin:' +                 '0 auto;',
         '}',
         '.' + CH_CLASS + '.' + CH_PREFIX + 'inline-button:hover {',
             'background:' +             'rgba(60, 60, 60, 0.8);',
@@ -1453,15 +1461,19 @@ function LoadStylesheet() {
         '}',
 
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_toggle {',
+            'width:' +                  '12px;',
             'position:' +               'relative;',
             'top:' +                    '-1px;',
+        '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_toggle span {',
+            'font-size:' +              '10px;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_add, ',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_delete {',
             'position:' +           'absolute;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_add {',
-            'right:' +              '16px;',
+            'right:' +              '20px;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_delete {',
             'right:' +              '0;',
