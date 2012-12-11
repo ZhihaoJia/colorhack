@@ -15,8 +15,8 @@ var BASE_Z_INDEX =                  9000;           // minimum z-index of ColorH
 
 var DIALOG_COLOR_SCHEMES_HEIGHT =   400;            // color-schemes dialog height
 var DIALOG_COLOR_SCHEMES_WIDTH =    200;            // color-schemes dialog width
-var DIALOG_COLOR_SETTINGS_HEIGHT =  220;            // color-settings dialog height
-var DIALOG_COLOR_SETTINGS_WIDTH =   350;            // color-settings dialog width
+var DIALOG_COLOR_SETTINGS_HEIGHT =  210;            // color-settings dialog height
+var DIALOG_COLOR_SETTINGS_WIDTH =   352;            // color-settings dialog width
 var DIALOG_ELEMENT_DETAILS_HEIGHT = 300;            // element-details dialog height
 var DIALOG_ELEMENT_DETAILS_WIDTH =  300;            // element-details dialog width
 
@@ -192,9 +192,9 @@ function ColorHack() {
 
     // Regex variables for input validation and filtering.
     var regexAlpha =    /^[a-zA-Z]*$/;
-    var regexAlphaNum = /^[a-zA-Z0-9]*$/
+    var regexAlphaNum = /^[a-zA-Z0-9]*$/;
     var regexDec =      /^[0-9]*$/;
-    var regexHex =      /^[a-fA-F0-9]*$/
+    var regexHex =      /^[a-fA-F0-9]*$/;
 
     var _isCtrlPressed = false;
 
@@ -234,7 +234,7 @@ function ColorHack() {
             (function() {
                 var toolbarOptions = $(); // empty jQuery object
                 // Build collection of toolbar options from dialogs array
-                for (i = 0 ; i < _dialogs.length ; i++) {
+                for (var i = 0 ; i < _dialogs.length ; i++) {
                     toolbarOptions = toolbarOptions.add(
                         $('<li/>', {
                             id:         CH_PREFIX + 'toolbar_' + _dialogs[i].id,
@@ -349,7 +349,7 @@ function ColorHack() {
                     (function() {
                         var components = $();
                         var colors = ['red', 'green', 'blue'];
-                        for (i = 0; i < colors.length; i++) {
+                        for (var i = 0; i < colors.length; i++) {
                             components = components.add(
                                 $('<div/>', {
                                     id:         CH_PREFIX + 'color-settings_color-component-' + colors[i],
@@ -436,7 +436,7 @@ function ColorHack() {
 
         'color-settings':           _colorSettings,
         'color-settings_colors':    _colorSettingsColors,
-        'color-components':            {
+        'color-components':         {
                                         red:    _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-component-red'),
                                         green:  _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-component-green'),
                                         blue:   _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-component-blue'),
@@ -448,13 +448,13 @@ function ColorHack() {
                                         blue:   _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker-blue'),
                                         alpha:  _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker-alpha')
                                     },
-        'color-picker_gradients':    {
+        'color-picker_gradients':   {
                                         red:    _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker_gradient-red'),
                                         green:  _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker_gradient-green'),
                                         blue:   _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker_gradient-blue'),
                                         alpha:  _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-picker_gradient-alpha')
                                     },
-        'color-textboxes':    {
+        'color-textboxes':          {
                                         hex:    _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-textbox-hex'),
                                         red:    _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-textbox-red'),
                                         green:  _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-textbox-green'),
@@ -521,7 +521,7 @@ function ColorHack() {
     // Input color scheme is a JQ DOM element, members is an array of member objects.
     var _AddColorSchemeMembers = function(scheme, members) {
         var $newMembers = $();
-            for (i = 0; i < members.length; i++) {
+            for (var i = 0; i < members.length; i++) {
                 $newMembers = $newMembers.add(
                     $('<div/>', {
                         'class':    CH_CLASS + ' ' +
@@ -536,20 +536,30 @@ function ColorHack() {
                     )
                     .append(
                         $('<span/>', {
-                            'class':    CH_PREFIX + ' ' +
-                                        CH_PREFIX + 'color-scheme_member_delete'
+                            'class':    CH_CLASS + ' ' +
+                                        CH_PREFIX + 'inline-button ' +
+                                        CH_PREFIX + 'color-scheme_add'
                         })
+                        .html('+')
+                    )
+                    .append(
+                        $('<span/>', {
+                            'class':    CH_CLASS + ' ' +
+                                        CH_PREFIX + 'inline-button ' +
+                                        CH_PREFIX + 'color-scheme_delete'
+                        })
+                        .html('&times;')
                     )
                 );
             }
-        scheme.append($newMembers);
+        scheme.find('.' + CH_PREFIX + 'color-scheme_members').append($newMembers);
     }
 
     // Adds one or more color schemes to Color Schemes dialog.
     // Input color schemes is an array of color scheme objects.
     var _AddColorSchemes = function(schemes) {
         var $newSchemes = $();
-        for (i = 0; i < schemes.length; i++) {
+        for (var i = 0; i < schemes.length; i++) {
             $newSchemes = $newSchemes.add(
                 $('<div/>', {
                     'class':    CH_CLASS + ' ' +
@@ -558,12 +568,13 @@ function ColorHack() {
                 .append(
                     $('<h3/>', {
                         'class':    CH_CLASS + ' ' +
-                                    CH_PREFIX + 'color-scheme_name'
+                                    CH_PREFIX + 'color-scheme_title'
                     })
                     .append(
                         $('<span/>', {
                             'class':    CH_CLASS + ' ' +
-                                        CH_PREFIX + 'color-scheme_toogle'
+                                        CH_PREFIX + 'inline-button ' +
+                                        CH_PREFIX + 'color-scheme_toggle'
                         })
                         .html('&minus;')
                     )
@@ -577,6 +588,7 @@ function ColorHack() {
                     .append(
                         $('<span/>', {
                             'class':    CH_CLASS + ' ' +
+                                        CH_PREFIX + 'inline-button ' +
                                         CH_PREFIX + 'color-scheme_add'
                         })
                         .html('+')
@@ -584,6 +596,7 @@ function ColorHack() {
                     .append(
                         $('<span/>', {
                             'class':    CH_CLASS + ' ' +
+                                        CH_PREFIX + 'inline-button ' +
                                         CH_PREFIX + 'color-scheme_delete'
                         })
                         .html('&times;')
@@ -680,7 +693,7 @@ function ColorHack() {
         var rgba = {};
 
         // Get the rgb value for each specific hue
-        for (i = 0; i < colors.length; i++) {
+        for (var i = 0; i < colors.length; i++) {
             // RGB value is based off of selector's position in the color picker.
             rgba[colors[i]] = COLORHACK.components['color-pickers'][colors[i]]
                 .find('.' + CH_PREFIX + 'color-picker_selector').css('left');
@@ -764,7 +777,7 @@ function ColorHack() {
         ];
 
         // Set up canvas for R, G, and B color pickers.
-        for (i = 0; i < colors.length; i++) {
+        for (var i = 0; i < colors.length; i++) {
             _FillGradient(
                 this.components['color-picker_gradients'],
                 colors[i].name,
@@ -931,7 +944,7 @@ function ColorHack() {
 
                 // Allow special characters.
                 if ((key === 8 || key === 46) ||    // backspace, delete
-                    (key === 9) ||                    // tab key
+                    (key === 9) ||                  // tab key
                     (key > 36 && key < 41)) {       // arrow keys
                     return true;
                 }
@@ -1009,10 +1022,40 @@ function ColorHack() {
         );
 
         // Set up default first color scheme
-        this.colorSchemes.push({
+        this.colorSchemes.push({ // start with few elements for testing
             name:       "Color Scheme 1",
             //members:    [],
-            members:    [ // start with one element for testing
+            members:    [
+                { name:     'body',
+                  el:       $('body').get(0) }
+            ],
+            colors:     [
+                { type:     COLOR_TYPE_FOREGROUND,
+                  value:    { r: 0, g: 0, b: 0 } },
+                { type:     COLOR_TYPE_BACKGROUND,
+                  value:    { r: 255, g: 255, b: 255 } },
+                { type:     COLOR_TYPE_BORDER,
+                  value:    { r: 0, g: 0, b: 0 } }
+            ]
+        });
+        this.colorSchemes.push({
+            name:       "Color Scheme 2",
+            members:    [
+                { name:     'body',
+                  el:       $('body').get(0) }
+            ],
+            colors:     [
+                { type:     COLOR_TYPE_FOREGROUND,
+                  value:    { r: 0, g: 0, b: 0 } },
+                { type:     COLOR_TYPE_BACKGROUND,
+                  value:    { r: 255, g: 255, b: 255 } },
+                { type:     COLOR_TYPE_BORDER,
+                  value:    { r: 0, g: 0, b: 0 } }
+            ]
+        });
+        this.colorSchemes.push({
+            name:       "Color Scheme 3",
+            members:    [
                 { name:     'body',
                   el:       $('body').get(0) }
             ],
@@ -1080,7 +1123,7 @@ function LoadCssReset() {
                 'footer', 'header', 'hgroup', 'menu', 'nav', 'section', 'summary',
                 'time', 'mark', 'audio', 'video'           
             ]
-            for (i = 0 ; i < els.length ; i++) {
+            for (var i = 0 ; i < els.length ; i++) {
                 els[i] += '.' + CH_CLASS;
             }
             return els.join(', ');
@@ -1101,7 +1144,7 @@ function LoadCssReset() {
                 'article', 'aside', 'details', 'figcaption', 'figure',
                 'footer', 'header', 'hgroup', 'menu', 'nav', 'section'
             ]
-            for (i = 0 ; i < els.length ; i++) {
+            for (var i = 0 ; i < els.length ; i++) {
                 els[i] += '.' + CH_CLASS;
             }
             return els.join(', ');
@@ -1165,11 +1208,11 @@ function LoadStylesheet() {
         '.' + CH_CLASS + ' {',
             'font-family:' +            '"HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, sans-serif !important;',
 
-            '-ms-transition:' +         'color .1s linear, opacity .2s linear;',
-            '-moz-transition:' +        'color .1s linear, opacity .2s linear;',
-            '-webkit-transition:' +     'color .1s linear, opacity .2s linear;',
-            '-o-transition:' +          'color .1s linear, opacity .2s linear;',
-            'transition:' +             'color .1s linear, opacity .2s linear;',
+            '-ms-transition:' +         'color .1s linear, border-color 0.1s linear, opacity .15s linear;',
+            '-moz-transition:' +        'color .1s linear, border-color 0.1s linear, opacity .15s linear;',
+            '-webkit-transition:' +     'color .1s linear, border-color 0.1s linear, opacity .15s linear;',
+            '-o-transition:' +          'color .1s linear, border-color 0.1s linear, opacity .15s linear;',
+            'transition:' +             'color .1s linear, border-color 0.1s linear, opacity .15s linear;',
         '}',
         '.' + CH_CLASS + ':not(.' + CH_PREFIX + 'dialog) * {',
             '-ms-transition:' +         'background .1s linear;',
@@ -1177,6 +1220,9 @@ function LoadStylesheet() {
             '-webkit-transition:' +     'background .1s linear;',
             '-o-transition:' +          'background .1s linear;',
             'transition:' +             'background .1s linear;',
+        '}',
+        'div.' + CH_CLASS + ', input.' + CH_CLASS + ' {',
+            'font-weight:' +            'lighter;',
         '}',
         'h1.' + CH_CLASS + ',',
         'h2.' + CH_CLASS + ',',
@@ -1186,6 +1232,28 @@ function LoadStylesheet() {
         'h6.' + CH_CLASS + ' {',
             'font-weight:' +            'bold;',
         '}',
+
+        '.' + CH_CLASS + '.' + CH_PREFIX + 'inline-button {',
+            'height:' +                 '12px;',
+            'display:' +                'inline-block;',
+            'padding:' +                '0 1px;',
+
+            'background:' +             'rgba(60, 60, 60, 0.4);',
+
+            'font-size:' +              '16px;',
+            'font-weight:' +            'bold;',
+            'line-height:' +            '8px;',
+
+            '-ms-transition:' +         'background 0s linear;',
+            '-moz-transition:' +        'background 0s linear;',
+            '-webkit-transition:' +     'background 0s linear;',
+            '-o-transition:' +          'background 0s linear;',
+            'transition:' +             'background 0s linear;',
+        '}',
+        '.' + CH_CLASS + '.' + CH_PREFIX + 'inline-button:hover {',
+            'background:' +             'rgba(60, 60, 60, 0.8);',
+        '}',
+
 
         // Menu + dialogs
         '#' + CH_PREFIX + 'menu,',
@@ -1221,6 +1289,7 @@ function LoadStylesheet() {
             'background:' +         '-o-linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
             'background:' +         'linear-gradient(top, rgb(250, 250, 250) 0%, rgb(210, 210, 210) 100%);',
         '}',
+
 
         // Menu
         '#' + CH_PREFIX + 'menu {',
@@ -1272,6 +1341,7 @@ function LoadStylesheet() {
             'display:' +            'inline-block;',
         '}',
 
+
         // Dialogs
         '#' + CH_PREFIX + 'color-schemes,',
         '#' + CH_PREFIX + 'color-settings,',
@@ -1283,7 +1353,7 @@ function LoadStylesheet() {
             'background:' +         'rgb(60, 60, 60);',
             'border:' +             '2px solid rgb(60, 60, 60);',
 
-            'font-size:              12px;',
+            'font-size:' +          '12px;',
         '}',
         '#' + CH_PREFIX + 'color-schemes:hover, ',
         '#' + CH_PREFIX + 'color-settings:hover, ',
@@ -1295,6 +1365,8 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header {',
             'position:' +           'relative;',
             'padding:' +            '4px 0;',
+
+            'border-bottom:' +      '2px solid rgb(60, 60, 60);',
 
             'cursor:' +             'move;',
             'font-size:' +          '14px;',
@@ -1335,13 +1407,81 @@ function LoadStylesheet() {
             '-webkit-user-select:' +    'none;',
             '-o-user-select:' +         'none;',
             'user-select:' +            'none;',
+
+            'font-weight:' +            'normal;',
         '}',
 
-        // Color scheme dialog
+
+        // Color schemes dialog
         '#' + CH_PREFIX + 'color-schemes {',
             'height:' +             DIALOG_COLOR_SCHEMES_HEIGHT + 'px;',
             'width:' +              DIALOG_COLOR_SCHEMES_WIDTH + 'px;',
         '}',
+
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme {',
+            'padding:' +            '4px 8px;',
+
+            'border:' +             '1px solid rgb(80, 80, 80);',
+
+            'background:' +         'rgb(100, 100, 100);',
+            'background:' +         '-ms-linear-gradient(top, rgb(110, 110, 110) 0%, rgb(90, 90, 90) 100%);',
+            'background:' +         '-moz-linear-gradient(top, rgb(110, 110, 110) 0%, rgb(90, 90, 90) 100%);',
+            'background:' +         '-webkit-linear-gradient(top, rgb(110, 110, 110) 0%, rgb(90, 90, 90) 100%);',
+            'background:' +         '-o-linear-gradient(top, rgb(110, 110, 110) 0%, rgb(90, 90, 90) 100%);',
+            'background:' +         'linear-gradient(top, rgb(110, 110, 110) 0%, rgb(90, 90, 90) 100%);',
+        '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme:hover {',
+            'border-color:' +       'rgb(160, 160, 160);',
+        '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme.selected {',
+            'background:' +         '-ms-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
+            'background:' +         '-moz-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
+            'background:' +         '-webkit-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
+            'background:' +         '-o-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
+            'background:' +         'linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
+        '}',
+
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_title {',
+            'position:' +           'relative;',
+
+            'font-size:' +          '14px;',
+        '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_name {',
+            'margin:' +             '0 4px;',
+
+            'font-weight:' +        'normal;',
+        '}',
+
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_toggle {',
+            'position:' +               'relative;',
+            'top:' +                    '-1px;',
+        '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_add, ',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_delete {',
+            'position:' +           'absolute;',
+        '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_add {',
+            'right:' +              '16px;',
+        '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_delete {',
+            'right:' +              '0;',
+        '}',
+
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_members {',
+            'margin:' +             '4px 0 0 16px;',
+            'padding:' +            '4px 0;',
+            'border-top:' +         '1px solid rgba(160, 160, 160, 0.8);',
+        '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member {',
+            'position:' +           'relative;',
+        '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member .' + CH_PREFIX + 'inline-button {',
+            'visibility:' +         'hidden;',
+        '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member.selected .' + CH_PREFIX + 'inline-button {',
+            'visibility:' +         'visible;',
+        '}',
+
 
         // Color settings dialog
         '#' + CH_PREFIX + 'color-settings {',
@@ -1350,10 +1490,11 @@ function LoadStylesheet() {
         '}',
 
         '#' + CH_PREFIX + 'color-settings_colors {',
-            'margin:' +             '6px 0px;',
             'padding:' +            '2px 8px;',
             'position:' +           'relative;',
             'z-index:' +            (BASE_Z_INDEX + 11) + ';',
+
+            'border:' +             '1px solid rgb(80, 80, 80);',
 
             'background:' +         'rgb(100, 100, 100);',
             'background:' +         '-ms-linear-gradient(top, rgb(110, 110, 110) 0%, rgb(90, 90, 90) 100%);',
@@ -1363,12 +1504,7 @@ function LoadStylesheet() {
             'background:' +         'linear-gradient(top, rgb(110, 110, 110) 0%, rgb(90, 90, 90) 100%);',
         '}',
         '#' + CH_PREFIX + 'color-settings_colors:hover {',
-            'background:' +         'rgb(110, 110, 110);',
-            'background:' +         '-ms-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
-            'background:' +         '-moz-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
-            'background:' +         '-webkit-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
-            'background:' +         '-o-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
-            'background:' +         'linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
+            'border-color:' +       'rgb(160, 160, 160);',
         '}',
 
         '#' + CH_PREFIX + 'color-settings_colors #' + CH_PREFIX + 'color-settings_color-components {',
@@ -1474,6 +1610,7 @@ function LoadStylesheet() {
             'width:' +              '54px;',
         '}',
 
+
         // Element details dialog
         '#' + CH_PREFIX + 'element-details {',
             'height:' +             DIALOG_ELEMENT_DETAILS_HEIGHT + 'px;',
@@ -1489,7 +1626,7 @@ function LoadStylesheet() {
     );
 }
 
-// Add ColorHack to the page once it has finished ready.
+// Add ColorHack to the page once it has finished loading.
 $(function() {
     if (typeof COLORHACK === 'undefined') {
         LoadCssReset();
