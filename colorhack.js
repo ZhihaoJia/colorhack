@@ -17,8 +17,8 @@ var DIALOG_COLOR_SCHEMES_HEIGHT =   400;            // color-schemes dialog heig
 var DIALOG_COLOR_SCHEMES_WIDTH =    200;            // color-schemes dialog width
 var DIALOG_COLOR_SETTINGS_HEIGHT =  'auto';         // color-settings dialog height
 var DIALOG_COLOR_SETTINGS_WIDTH =   352;            // color-settings dialog width
-var DIALOG_ELEMENT_DETAILS_HEIGHT = 300;            // element-details dialog height
-var DIALOG_ELEMENT_DETAILS_WIDTH =  300;            // element-details dialog width
+var DIALOG_COLORSCHEME_DETAILS_HEIGHT = 300;            // colorscheme-details dialog height
+var DIALOG_COLORSCHEME_DETAILS_WIDTH =  300;            // colorscheme-details dialog width
 
 var SLIDE_DURATION =                300;            // time taken to complete slide animations
 
@@ -61,7 +61,7 @@ function ColorHack() {
     var _colorSettings =            {};
     var _colorSettingsColors =      {};
 
-    var _elementDetails =           {};
+    var _colorschemeDetails =           {};
 
     // Public properties
     this.components =               {};
@@ -204,7 +204,7 @@ function ColorHack() {
     var _dialogs = [
         { id: 'color-schemes',          name: 'Color Schemes' },
         { id: 'color-settings',         name: 'Color Settings' },
-        { id: 'element-details',        name: 'Element Details' }
+        { id: 'colorscheme-details',    name: 'Color Scheme Details' }
     ];
 
     /*
@@ -397,21 +397,21 @@ function ColorHack() {
 
     /*
      --------------------------------
-          ELEMENT DETAILS DIALOG
+          COLORSCHEME DETAILS DIALOG
      --------------------------------
      */
 
-    // Element details dialog.
+    // Color scheme details dialog.
     // Shows details on element attributes and applied color rules.
-    var _elementDetails =
+    var _colorschemeDetails =
         $('<div/>', {
-            id:         CH_PREFIX + 'element-details',
+            id:         CH_PREFIX + 'colorscheme-details',
             'class':    CH_CLASS + ' ' +
                         CH_PREFIX + 'dialog'
         })
         // Add dialog header
         .append(
-            _CreateDialogHeader('Element Details')
+            _CreateDialogHeader('Color Scheme Details')
         )
     ;
 
@@ -430,7 +430,7 @@ function ColorHack() {
         dialogs:                    $()
                                         .add(_colorSchemes)
                                         .add(_colorSettings)
-                                        .add(_elementDetails),
+                                        .add(_colorschemeDetails),
 
         'color-schemes':            _colorSchemes,
         'color-schemes_schemes':    _colorSchemes.find('.' + CH_PREFIX + 'color-schemes'),
@@ -463,7 +463,7 @@ function ColorHack() {
                                         alpha:  _colorSettingsColors.find('#' + CH_PREFIX + 'color-settings_color-textbox-alpha')
                                     },
 
-        'element-details':          _elementDetails
+        'colorscheme-details':      _colorschemeDetails
     };
 
     // Contains all the color schemes tracked by ColorHack.
@@ -800,7 +800,7 @@ function ColorHack() {
             // Add dialogs to page
             .append(this.components['color-schemes'])
             .append(this.components['color-settings'])
-            .append(this.components['element-details'])
+            .append(this.components['colorscheme-details'])
         ;
     }
 
@@ -1037,7 +1037,7 @@ function ColorHack() {
             'top':  '4px',
             right:  '4px'
         });
-        this.components['element-details'].css({
+        this.components['colorscheme-details'].css({
             bottom: '4px',
             left:   '4px'
         });
@@ -1313,7 +1313,7 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'menu,',
         '#' + CH_PREFIX + 'color-schemes,',
         '#' + CH_PREFIX + 'color-settings,',
-        '#' + CH_PREFIX + 'element-details {',
+        '#' + CH_PREFIX + 'colorscheme-details {',
         // Position is !important to overwrite jQuery inline style of position: relative for Chrome.
         // Possibly a bug in jQuery UI (checks for other position styling, so should not overwrite it).
         // Have not been able to isolate exact cause in jq, and have not been able to reproduce issue in simpler test cases.
@@ -1322,7 +1322,7 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'menu,',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header,',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header,',
-        '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header {',
+        '#' + CH_PREFIX + 'colorscheme-details .' + CH_PREFIX + 'dialog-header {',
             '-ms-user-select:' +        'none;',
             '-moz-user-select:' +       'none;',
             '-webkit-user-select:' +    'none;',
@@ -1332,7 +1332,7 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'icon,',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header,',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header,',
-        '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header {',
+        '#' + CH_PREFIX + 'colorscheme-details .' + CH_PREFIX + 'dialog-header {',
             'color:' +              'rgb(60, 60, 60);',
             'background:' +         'rgb(240, 240, 240);', // won't be applied if browser supports CSS3
             'text-shadow:' +        '0 1px rgb(250, 250, 250);',
@@ -1399,7 +1399,7 @@ function LoadStylesheet() {
         // Dialogs
         '#' + CH_PREFIX + 'color-schemes,',
         '#' + CH_PREFIX + 'color-settings,',
-        '#' + CH_PREFIX + 'element-details {',
+        '#' + CH_PREFIX + 'colorscheme-details {',
             'z-index:' +            BASE_Z_INDEX + ';',
 
             'opacity:' +            '0.6;',
@@ -1411,12 +1411,12 @@ function LoadStylesheet() {
         '}',
         '#' + CH_PREFIX + 'color-schemes:hover, ',
         '#' + CH_PREFIX + 'color-settings:hover, ',
-        '#' + CH_PREFIX + 'element-details:hover {',
+        '#' + CH_PREFIX + 'colorscheme-details:hover {',
             'opacity:' +            '1;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header, ',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header, ',
-        '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header {',
+        '#' + CH_PREFIX + 'colorscheme-details .' + CH_PREFIX + 'dialog-header {',
             'position:' +           'relative;',
             'padding:' +            '4px 0;',
 
@@ -1429,12 +1429,12 @@ function LoadStylesheet() {
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-title, ',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-title, ',
-        '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-title {',
+        '#' + CH_PREFIX + 'colorscheme-details .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-title {',
             'display:' +            'inline-block;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close, ',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close, ',
-        '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close {',
+        '#' + CH_PREFIX + 'colorscheme-details .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close {',
             'position:' +           'absolute;',
             'top:' +                '0;',
             'right:' +              '0;',
@@ -1447,7 +1447,7 @@ function LoadStylesheet() {
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close:hover, ',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close:hover, ',
-        '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close:hover {',
+        '#' + CH_PREFIX + 'colorscheme-details .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close:hover {',
             'opacity:' +            '1;',
         '}',
 
@@ -1455,7 +1455,7 @@ function LoadStylesheet() {
          * Haven't been able to get it working either by selecting specific elements or using :not() */
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-label,',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'color-label,',
-        '#' + CH_PREFIX + 'element-details .' + CH_PREFIX + 'color-label {',
+        '#' + CH_PREFIX + 'colorscheme-details .' + CH_PREFIX + 'color-label {',
             '-ms-user-select:' +        'none;',
             '-moz-user-select:' +       'none;',
             '-webkit-user-select:' +    'none;',
@@ -1672,10 +1672,10 @@ function LoadStylesheet() {
         '}',
 
 
-        // Element details dialog
-        '#' + CH_PREFIX + 'element-details {',
-            'height:' +             DIALOG_ELEMENT_DETAILS_HEIGHT + 'px;',
-            'width:' +              DIALOG_ELEMENT_DETAILS_WIDTH + 'px;',
+        // Color scheme details dialog
+        '#' + CH_PREFIX + 'colorscheme-details {',
+            'height:' +             DIALOG_COLORSCHEME_DETAILS_HEIGHT + 'px;',
+            'width:' +              DIALOG_COLORSCHEME_DETAILS_WIDTH + 'px;',
         '}'
     ]
 
