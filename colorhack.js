@@ -15,7 +15,7 @@ var BASE_Z_INDEX =                  9000;           // minimum z-index of ColorH
 
 var DIALOG_COLOR_SCHEMES_HEIGHT =   400;            // color-schemes dialog height
 var DIALOG_COLOR_SCHEMES_WIDTH =    200;            // color-schemes dialog width
-var DIALOG_COLOR_SETTINGS_HEIGHT =  210;            // color-settings dialog height
+var DIALOG_COLOR_SETTINGS_HEIGHT =  'auto';         // color-settings dialog height
 var DIALOG_COLOR_SETTINGS_WIDTH =   352;            // color-settings dialog width
 var DIALOG_ELEMENT_DETAILS_HEIGHT = 300;            // element-details dialog height
 var DIALOG_ELEMENT_DETAILS_WIDTH =  300;            // element-details dialog width
@@ -75,6 +75,7 @@ function ColorHack() {
     var _AddColorSchemeMembers =    function() {}
     var _AddColorSchemes =          function() {}
     var _UpdateColorSchemes =       function() {}
+    var _SelectColorScheme =        function() {}
 
     var _FillGradient =             function() {}
     var _UpdateActiveColor =        function() {}
@@ -432,7 +433,7 @@ function ColorHack() {
                                         .add(_elementDetails),
 
         'color-schemes':            _colorSchemes,
-        'color-schemes_schemes':    _colorSchemes.find('.' + CH_PREFIX + 'color-schemes_schemes'),
+        'color-schemes_schemes':    _colorSchemes.find('.' + CH_PREFIX + 'color-schemes'),
 
         'color-settings':           _colorSettings,
         'color-settings_colors':    _colorSettingsColors,
@@ -578,7 +579,7 @@ function ColorHack() {
                         })
                         // #x25b6 = black right triangle arrow
                         // #x25bc = black down triangle arrow
-                        .html('<span>&#x25bc;</span>')
+                        .html('<span>&#x25b6;</span>')
                     )
                     .append(
                         $('<span/>', {
@@ -609,6 +610,7 @@ function ColorHack() {
                         'class':    CH_CLASS + ' ' +
                                     CH_PREFIX + 'color-scheme_members'
                     })
+                    .hide()
                 )
             )
             // Add member DOM elements to the color scheme.
@@ -623,6 +625,39 @@ function ColorHack() {
         var $colorSchemes = COLORHACK.components['color-schemes'].find('#' + CH_PREFIX + 'color-schemes_schemes');
         $colorSchemes.empty();
         _AddColorSchemes(COLORHACK.colorSchemes);
+    }
+
+    // Selects color scheme from input color scheme element.
+    var _SelectColorScheme = function(cs) {
+        var $cs = $(cs);
+        var $members = $cs.find('.' + CH_PREFIX + 'color-scheme_members');
+
+        if ($cs.hasClass('selected')) {
+            $cs.parent().find('.' + CH_PREFIX + 'color-scheme.selected').removeClass('selected');
+            $cs.find('.' + CH_PREFIX + 'color-scheme_toggle').css({
+                '-ms-transform':       '',
+                '-moz-transform':      '',
+                '-webkit-transform':   '',
+                '-o-transform':        '',
+                'transform':           ''
+            })
+        } else {
+            $cs.parent().find('.' + CH_PREFIX + 'color-scheme.selected').removeClass('selected');
+            $cs.addClass('selected');
+            $cs.find('.' + CH_PREFIX + 'color-scheme_toggle').css({
+                '-ms-transform':       'rotate(90deg)',
+                '-moz-transform':      'rotate(90deg)',
+                '-webkit-transform':   'rotate(90deg)',
+                '-o-transform':        'rotate(90deg)',
+                'transform':           'rotate(90deg)'
+            })
+        }
+        /*if ($members.css('display') === 'none') {
+            $cs.find('.' + CH_PREFIX + 'color-scheme_toggle span').html('&#x25bc;');
+        } else {
+            $cs.find('.' + CH_PREFIX + 'color-scheme_toggle span').html('&#x25b6;');
+        }*/
+        $members.slideToggle(SLIDE_DURATION, function() {});
     }
 
     // Fills a given color gradient for a color picker based on input colors.
@@ -847,7 +882,7 @@ function ColorHack() {
             })
         })
 
-        /* DIALOG */
+        /* DIALOGS */
 
         // Drag dialogs by dialog header.
         this.components.dialogs.draggable({
@@ -876,6 +911,14 @@ function ColorHack() {
                 .find('.' + CH_PREFIX + 'toolbar-item-check')
                 .html('');
         });
+
+        /* COLOR SCHEMES DIALOG */
+
+        // Toggle slide on color scheme members list on click.
+        this.components['color-schemes_schemes']
+            .on('click', '.' + CH_PREFIX + 'color-scheme', function (e) {
+                _SelectColorScheme(this);
+            });
 
         /* COLOR SETTINGS DIALOG */
 
@@ -1071,6 +1114,8 @@ function ColorHack() {
             ]
         });
         _UpdateColorSchemes();
+        // Automatically select the first color scheme.
+        _SelectColorScheme(this.components['color-schemes_schemes'].find('.' + CH_PREFIX + 'color-scheme:first-child').get(0));
     }
 
     // Sets up ColorHack on the page.
@@ -1240,6 +1285,7 @@ function LoadStylesheet() {
             'width:' +                  '14px;',
             'display:' +                'inline-block;',
             'padding:' +                '0 1px;',
+            'cursor:' +                 'pointer;',
 
             'background:' +             'rgba(60, 60, 60, 0.4);',
 
@@ -1428,6 +1474,7 @@ function LoadStylesheet() {
 
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme {',
             'padding:' +            '4px 8px;',
+            'cursor:' +             'pointer;',
 
             'border:' +             '1px solid rgb(80, 80, 80);',
 
@@ -1464,6 +1511,8 @@ function LoadStylesheet() {
             'width:' +                  '12px;',
             'position:' +               'relative;',
             'top:' +                    '-1px;',
+
+            'background:' +             'rgba(0, 0, 0, 0);',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_toggle span {',
             'font-size:' +              '10px;',
