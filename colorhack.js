@@ -8,27 +8,27 @@
 // Safe to change.
 
 // Modify these values to resolve conflicts with the page's elements.
-var CH_PREFIX =                     'colorhack_';   // HTML id prefix for naming ColorHack elements
-var CH_CLASS =                      'colorhack';    // HTML class to identify ColorHack elements
+var CH_PREFIX =                         'colorhack_';   // HTML id prefix for naming ColorHack elements
+var CH_CLASS =                          'colorhack';    // HTML class to identify ColorHack elements
 
-var BASE_Z_INDEX =                  9000;           // minimum z-index of ColorHack elements 
+var BASE_Z_INDEX =                      9000;           // minimum z-index of ColorHack elements 
 
-var DIALOG_COLOR_SCHEMES_HEIGHT =   400;            // color-schemes dialog height
-var DIALOG_COLOR_SCHEMES_WIDTH =    200;            // color-schemes dialog width
-var DIALOG_COLOR_SETTINGS_HEIGHT =  'auto';         // color-settings dialog height
-var DIALOG_COLOR_SETTINGS_WIDTH =   352;            // color-settings dialog width
+var DIALOG_COLOR_SCHEMES_HEIGHT =       400;            // color-schemes dialog height
+var DIALOG_COLOR_SCHEMES_WIDTH =        200;            // color-schemes dialog width
+var DIALOG_COLOR_SETTINGS_HEIGHT =      'auto';         // color-settings dialog height
+var DIALOG_COLOR_SETTINGS_WIDTH =       352;            // color-settings dialog width
 var DIALOG_COLORSCHEME_DETAILS_HEIGHT = 300;            // colorscheme-details dialog height
 var DIALOG_COLORSCHEME_DETAILS_WIDTH =  300;            // colorscheme-details dialog width
 
-var SLIDE_DURATION =                300;            // time taken to complete slide animations
+var SLIDE_DURATION =                    300;            // time taken to complete slide animations
 
 /* Constants used by ColorHack */
 // Not safe to change.
 
 // Type enumeration of color scheme color types (used in color schemes)
-var COLOR_TYPE_FOREGROUND =         1;
-var COLOR_TYPE_BACKGROUND =         2;
-var COLOR_TYPE_BORDER =             3;
+var COLOR_TYPE_FOREGROUND =             1;
+var COLOR_TYPE_BACKGROUND =             2;
+var COLOR_TYPE_BORDER =                 3;
 
 // ColorHack object
 var COLORHACK;
@@ -61,7 +61,7 @@ function ColorHack() {
     var _colorSettings =            {};
     var _colorSettingsColors =      {};
 
-    var _colorschemeDetails =           {};
+    var _colorschemeDetails =       {};
 
     // Public properties
     this.components =               {};
@@ -78,8 +78,9 @@ function ColorHack() {
     var _SelectColorScheme =        function() {}
 
     var _FillGradient =             function() {}
-    var _UpdateActiveColor =        function() {}
     var _SetActiveColor =           function() {}
+    var _UpdateActiveColor =        function() {}
+    var _SubmitColorTextbox =       function() {}
 
     // Public methods
     this.BuildDialogs =             function() {}
@@ -521,6 +522,7 @@ function ColorHack() {
     // Adds one or more members to the input color scheme.
     // Input color scheme is a JQ DOM element, members is an array of member objects.
     var _AddColorSchemeMembers = function(scheme, members) {
+        var memberCount = scheme.find('.' + CH_PREFIX + 'color-scheme_member').length;
         var $newMembers = $();
             for (var i = 0; i < members.length; i++) {
                 $newMembers = $newMembers.add(
@@ -528,6 +530,7 @@ function ColorHack() {
                         'class':    CH_CLASS + ' ' +
                                     CH_PREFIX + 'color-scheme_member'
                     })
+                    .data('index', memberCount)
                     .append(
                         $('<span/>', {
                             'class':    CH_CLASS + ' ' +
@@ -539,6 +542,7 @@ function ColorHack() {
                         $('<span/>', {
                             'class':    CH_CLASS + ' ' +
                                         CH_PREFIX + 'inline-button ' +
+                                        CH_PREFIX + 'small ' +
                                         CH_PREFIX + 'color-scheme_add'
                         })
                         .html('<span>+</span>')
@@ -547,11 +551,14 @@ function ColorHack() {
                         $('<span/>', {
                             'class':    CH_CLASS + ' ' +
                                         CH_PREFIX + 'inline-button ' +
+                                        CH_PREFIX + 'small ' +
                                         CH_PREFIX + 'color-scheme_delete'
                         })
                         .html('<span>&minus;</span>')
                     )
                 );
+
+                memberCount++;
             }
         scheme.find('.' + CH_PREFIX + 'color-scheme_members').append($newMembers);
     }
@@ -559,6 +566,7 @@ function ColorHack() {
     // Adds one or more color schemes to Color Schemes dialog.
     // Input color schemes is an array of color scheme objects.
     var _AddColorSchemes = function(schemes) {
+        var schemeCount = COLORHACK.colorSchemes.length;
         var $newSchemes = $();
         for (var i = 0; i < schemes.length; i++) {
             $newSchemes = $newSchemes.add(
@@ -566,6 +574,7 @@ function ColorHack() {
                     'class':    CH_CLASS + ' ' +
                                 CH_PREFIX + 'color-scheme'
                 })
+                .data('index', schemeCount)
                 .append(
                     $('<h3/>', {
                         'class':    CH_CLASS + ' ' +
@@ -615,6 +624,8 @@ function ColorHack() {
             )
             // Add member DOM elements to the color scheme.
             _AddColorSchemeMembers($newSchemes.eq(i), schemes[i].members);
+
+            schemeCount++;
         }
         COLORHACK.components['color-schemes'].find('#' + CH_PREFIX + 'color-schemes_schemes')
             .append($newSchemes);
@@ -632,8 +643,8 @@ function ColorHack() {
         var $cs = $(cs);
         var $members = $cs.find('.' + CH_PREFIX + 'color-scheme_members');
 
-        if ($cs.hasClass('selected')) {
-            $cs.parent().find('.' + CH_PREFIX + 'color-scheme.selected').removeClass('selected');
+        if ($cs.hasClass(CH_PREFIX + 'expanded')) {
+            $cs.removeClass(CH_PREFIX + 'expanded');
             $cs.find('.' + CH_PREFIX + 'color-scheme_toggle').css({
                 '-ms-transform':       '',
                 '-moz-transform':      '',
@@ -642,8 +653,7 @@ function ColorHack() {
                 'transform':           ''
             })
         } else {
-            $cs.parent().find('.' + CH_PREFIX + 'color-scheme.selected').removeClass('selected');
-            $cs.addClass('selected');
+            $cs.addClass(CH_PREFIX + 'expanded');
             $cs.find('.' + CH_PREFIX + 'color-scheme_toggle').css({
                 '-ms-transform':       'rotate(90deg)',
                 '-moz-transform':      'rotate(90deg)',
@@ -1071,6 +1081,8 @@ function ColorHack() {
             name:       "Color Scheme 1",
             //members:    [],
             members:    [
+                { name:     'head',
+                  el:       $('head').get(0) },
                 { name:     'body',
                   el:       $('body').get(0) }
             ],
@@ -1255,11 +1267,11 @@ function LoadStylesheet() {
         '.' + CH_CLASS + ' {',
             'font-family:' +            '"HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, sans-serif !important;',
 
-            '-ms-transition:' +         'color .1s linear, border-color 0.1s linear, opacity .15s linear;',
-            '-moz-transition:' +        'color .1s linear, border-color 0.1s linear, opacity .15s linear;',
-            '-webkit-transition:' +     'color .1s linear, border-color 0.1s linear, opacity .15s linear;',
-            '-o-transition:' +          'color .1s linear, border-color 0.1s linear, opacity .15s linear;',
-            'transition:' +             'color .1s linear, border-color 0.1s linear, opacity .15s linear;',
+            '-ms-transition:' +         'color .1s linear, border-color .1s linear, opacity .15s linear, -ms-transform .1s linear;',
+            '-moz-transition:' +        'color .1s linear, border-color .1s linear, opacity .15s linear, -moz-transform .1s linear;',
+            '-webkit-transition:' +     'color .1s linear, border-color .1s linear, opacity .15s linear, -webkit-transform .1s linear;',
+            '-o-transition:' +          'color .1s linear, border-color .1s linear, opacity .15s linear, -o-transform .1s linear;',
+            'transition:' +             'color .1s linear, border-color .1s linear, opacity .15s linear, transform .1s linear;',
         '}',
         '.' + CH_CLASS + ':not(.' + CH_PREFIX + 'dialog) * {',
             '-ms-transition:' +         'background .1s linear;',
@@ -1299,6 +1311,13 @@ function LoadStylesheet() {
             '-webkit-transition:' +     'background 0s linear;',
             '-o-transition:' +          'background 0s linear;',
             'transition:' +             'background 0s linear;',
+        '}',
+        '.' + CH_CLASS + '.' + CH_PREFIX + 'inline-button.' + CH_PREFIX + 'small {',
+            'height:' +                 '12px;',
+            'width:' +                  '12px;',
+
+            'font-size:' +              '16px;',
+            'line-height:' +            '8px;',
         '}',
         '.' + CH_CLASS + '.' + CH_PREFIX + 'inline-button span {',
             'display:' +                'inline-block;',
@@ -1362,7 +1381,7 @@ function LoadStylesheet() {
         '}',
         '#' + CH_PREFIX + 'icon,',
         '#' + CH_PREFIX + 'toolbar {',
-            'width:' +              '150px;',
+            'width:' +              '180px;',
 
             'border:' +             '2px solid rgb(60, 60, 60);',
         '}',
@@ -1488,7 +1507,7 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme:hover {',
             'border-color:' +       'rgb(160, 160, 160);',
         '}',
-        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme.selected {',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme.' + CH_PREFIX + 'expanded {',
             'background:' +         '-ms-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
             'background:' +         '-moz-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
             'background:' +         '-webkit-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
@@ -1535,11 +1554,27 @@ function LoadStylesheet() {
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member {',
             'position:' +           'relative;',
+            'padding:' +            '3px 2px;',
+
+            '-ms-transition:' +     'background 0s linear;',
+            '-moz-transition:' +    'background 0s linear;',
+            '-webkit-transition:' + 'background 0s linear;',
+            '-o-transition:' +      'background 0s linear;',
+            'transition:' +         'background 0s linear;',
+        '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member .' + CH_PREFIX + 'color-scheme_add {',
+            'right:' +              '22px;',
+        '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member .' + CH_PREFIX + 'color-scheme_delete {',
+            'right:' +              '2px;',
+        '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member:hover {',
+            'background:' +         'rgba(60, 60, 60, 0.2);',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member .' + CH_PREFIX + 'inline-button {',
             'visibility:' +         'hidden;',
         '}',
-        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member.selected .' + CH_PREFIX + 'inline-button {',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member:hover .' + CH_PREFIX + 'inline-button {',
             'visibility:' +         'visible;',
         '}',
 
