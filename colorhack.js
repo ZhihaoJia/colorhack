@@ -8,19 +8,21 @@
 // Safe to change.
 
 // Modify these values to resolve conflicts with the page's elements.
-var CH_PREFIX =                         'colorhack_';   // HTML id prefix for naming ColorHack elements
-var CH_CLASS =                          'colorhack';    // HTML class to identify ColorHack elements
+var CH_PREFIX =                         'colorhack_';       // HTML id prefix for naming ColorHack elements
+var CH_CLASS =                          'colorhack';        // HTML class to identify ColorHack elements
 
-var BASE_Z_INDEX =                      9000;           // minimum z-index of ColorHack elements 
+var BASE_Z_INDEX =                      9000;               // minimum z-index of ColorHack elements 
 
-var DIALOG_COLOR_SCHEMES_HEIGHT =       400;            // color-schemes dialog height
-var DIALOG_COLOR_SCHEMES_WIDTH =        200;            // color-schemes dialog width
-var DIALOG_COLOR_SETTINGS_HEIGHT =      'auto';         // color-settings dialog height
-var DIALOG_COLOR_SETTINGS_WIDTH =       352;            // color-settings dialog width
-var DIALOG_COLORSCHEME_DETAILS_HEIGHT = 300;            // colorscheme-details dialog height
-var DIALOG_COLORSCHEME_DETAILS_WIDTH =  300;            // colorscheme-details dialog width
+var DIALOG_COLOR_SCHEMES_HEIGHT =       400;                // color-schemes dialog height
+var DIALOG_COLOR_SCHEMES_WIDTH =        200;                // color-schemes dialog width
+var DIALOG_COLOR_SETTINGS_HEIGHT =      'auto';             // color-settings dialog height
+var DIALOG_COLOR_SETTINGS_WIDTH =       352;                // color-settings dialog width
+var DIALOG_COLORSCHEME_DETAILS_HEIGHT = 300;                // colorscheme-details dialog height
+var DIALOG_COLORSCHEME_DETAILS_WIDTH =  300;                // colorscheme-details dialog width
 
-var SLIDE_DURATION =                    300;            // time taken to complete slide animations
+var SLIDE_DURATION =                    300;                // time taken to complete slide animations
+
+var HIGHLIGHT_COLOR =                   'rgb(60, 100, 250)' // color used to highlight active elements
 
 /* Constants used by ColorHack */
 // Not safe to change.
@@ -68,14 +70,19 @@ function ColorHack() {
     this.colorSchemes =             [];
 
     // Private methods
-    var _GetPos =                   function() {}
+    var _GetElPos =                 function() {}
     var _RgbToHex =                 function() {}
     var _HexToRgb =                 function() {}
 
     var _AddColorSchemeMembers =    function() {}
     var _AddColorSchemes =          function() {}
     var _UpdateColorSchemes =       function() {}
+
+    var _ToggleColorScheme =        function() {}
     var _SelectColorScheme =        function() {}
+
+    var _RemoveColorScheme =        function() {}
+    var _RemoveColorSchemeMember =  function() {}
 
     var _FillGradient =             function() {}
     var _SetActiveColor =           function() {}
@@ -188,6 +195,10 @@ function ColorHack() {
      ================================
      */
 
+    // Counts the total number of color schemes created (included deleted ones).
+    // Used to assign IDs to newly-created color schemes.
+    var schemeCount = 0;
+
     // Variables used to count number of clicks.
     // Used to differentiate between single, double, etc. clicks.
     var _clickTimer = null, _clicks = 0;
@@ -198,7 +209,11 @@ function ColorHack() {
     var regexDec =      /^[0-9]*$/;
     var regexHex =      /^[a-fA-F0-9]*$/;
 
+    // Boolean to track whether the control/command key is pressed.
     var _isCtrlPressed = false;
+
+    // Indicates whether we are adding an element to the active color scheme.
+    var _addMemberMode = false;
 
     // Dialogs that make up the main UI.
     // Used to generate the menu toolbar options.
@@ -470,17 +485,25 @@ function ColorHack() {
     // Contains all the color schemes tracked by ColorHack.
     // Each color scheme is an object of the following form:
     //  {
-    //      name:       string
-    //      members:    [ {
-    //              name:   string
-    //              el:     element
+    //      name:           string                              // arbitrary non-unique name given to color scheme
+    //      id:             string                              // id of color scheme element in DOM
+    //      memberCount:    integer                             // similar purpose to schemeCount for COLORHACK object
+    //      members:        [ {                                 // array of objects to keep track of elements belonging to color scheme
+    //              name:   string                                  // arbitrary non-unique name
+    //              id:     string                                  // id of el in DOM
+    //              el:     element                                 // DOM element
     //          }, ... ]
-    //      colors:     [ {
+    //      colors:         [ {                                 // array of objects describing color properties of color scheme
     //              type:   integer                                 // enumeration, describes type of color (e.g. color, background, ...)
     //              value:  { r: integer, g: integer, b: integer }  // rgb object
     //          }, ... ]
     //  }
     this.colorSchemes = [];
+
+    // Should I even keep track of color schemes interally? Is it necessary?
+    // Adding and deleting schemes and scheme members would be simpler without this...
+    // If I need to do something with the color schemes later though (like generate CSS),
+    // I would rather not go through the DOM to do it...
 
     /*
      ================================
@@ -489,7 +512,7 @@ function ColorHack() {
      */
 
     // Returns the position of an element on the page.
-    var _GetPos = function(el) {
+    var _GetElPos = function(el) {
         for (
             var xPos = 0, yPos = 0;
             el != null;
@@ -522,59 +545,61 @@ function ColorHack() {
     // Adds one or more members to the input color scheme.
     // Input color scheme is a JQ DOM element, members is an array of member objects.
     var _AddColorSchemeMembers = function(scheme, members) {
-        var memberCount = scheme.find('.' + CH_PREFIX + 'color-scheme_member').length;
         var $newMembers = $();
-            for (var i = 0; i < members.length; i++) {
-                $newMembers = $newMembers.add(
-                    $('<div/>', {
-                        'class':    CH_CLASS + ' ' +
-                                    CH_PREFIX + 'color-scheme_member'
-                    })
-                    .data('index', memberCount)
-                    .append(
-                        $('<span/>', {
-                            'class':    CH_CLASS + ' ' +
-                                        CH_PREFIX + 'color-scheme_member_name'
-                        })
-                        .html(members[i].name)
-                    )
-                    .append(
-                        $('<span/>', {
-                            'class':    CH_CLASS + ' ' +
-                                        CH_PREFIX + 'inline-button ' +
-                                        CH_PREFIX + 'small ' +
-                                        CH_PREFIX + 'color-scheme_add'
-                        })
-                        .html('<span>+</span>')
-                    )
-                    .append(
-                        $('<span/>', {
-                            'class':    CH_CLASS + ' ' +
-                                        CH_PREFIX + 'inline-button ' +
-                                        CH_PREFIX + 'small ' +
-                                        CH_PREFIX + 'color-scheme_delete'
-                        })
-                        .html('<span>&minus;</span>')
-                    )
-                );
 
-                memberCount++;
-            }
+        var addColorSchemeMember = function(index) {
+            $newMembers = $newMembers.add(
+                $('<div/>', {
+                    id:         members[index].id,
+                    'class':    CH_CLASS + ' ' +
+                                CH_PREFIX + 'color-scheme_member'
+                })
+                .append(
+                    $('<span/>', {
+                        'class':    CH_CLASS + ' ' +
+                                    CH_PREFIX + 'color-scheme_member_name'
+                    })
+                    .html(members[index].name)
+                )
+                .append(
+                    $('<span/>', {
+                        'class':    CH_CLASS + ' ' +
+                                    CH_PREFIX + 'inline-button ' +
+                                    CH_PREFIX + 'small ' +
+                                    CH_PREFIX + 'color-scheme_add'
+                    })
+                    .html('<span>+</span>')
+                )
+                .append(
+                    $('<span/>', {
+                        'class':    CH_CLASS + ' ' +
+                                    CH_PREFIX + 'inline-button ' +
+                                    CH_PREFIX + 'small ' +
+                                    CH_PREFIX + 'color-scheme_remove'
+                    })
+                    .html('<span>&minus;</span>')
+                )
+            );
+        }
+
+        for (var i = 0; i < members.length; i++) {
+            addColorSchemeMember(i);
+        }
         scheme.find('.' + CH_PREFIX + 'color-scheme_members').append($newMembers);
     }
 
     // Adds one or more color schemes to Color Schemes dialog.
     // Input color schemes is an array of color scheme objects.
     var _AddColorSchemes = function(schemes) {
-        var schemeCount = COLORHACK.colorSchemes.length;
         var $newSchemes = $();
-        for (var i = 0; i < schemes.length; i++) {
+
+        var addColorScheme = function(index) {
             $newSchemes = $newSchemes.add(
                 $('<div/>', {
+                    id:         schemes[index].id,
                     'class':    CH_CLASS + ' ' +
                                 CH_PREFIX + 'color-scheme'
                 })
-                .data('index', schemeCount)
                 .append(
                     $('<h3/>', {
                         'class':    CH_CLASS + ' ' +
@@ -595,7 +620,7 @@ function ColorHack() {
                             'class':    CH_CLASS + ' ' +
                                         CH_PREFIX + 'color-scheme_name'
                         })
-                        .html(schemes[i].name)
+                        .html(schemes[index].name)
                     )
                     .append(
                         $('<span/>', {
@@ -609,7 +634,7 @@ function ColorHack() {
                         $('<span/>', {
                             'class':    CH_CLASS + ' ' +
                                         CH_PREFIX + 'inline-button ' +
-                                        CH_PREFIX + 'color-scheme_delete'
+                                        CH_PREFIX + 'color-scheme_remove'
                         })
                         .html('<span>&minus;</span>')
                     )
@@ -623,9 +648,11 @@ function ColorHack() {
                 )
             )
             // Add member DOM elements to the color scheme.
-            _AddColorSchemeMembers($newSchemes.eq(i), schemes[i].members);
+            _AddColorSchemeMembers($newSchemes.eq(index), schemes[index].members);
+        }
 
-            schemeCount++;
+        for (var i = 0; i < schemes.length; i++) {
+            addColorScheme(i);
         }
         COLORHACK.components['color-schemes'].find('#' + CH_PREFIX + 'color-schemes_schemes')
             .append($newSchemes);
@@ -638,9 +665,8 @@ function ColorHack() {
         _AddColorSchemes(COLORHACK.colorSchemes);
     }
 
-    // Selects color scheme from input color scheme element.
-    var _SelectColorScheme = function(cs) {
-        var $cs = $(cs);
+    var _ToggleColorScheme = function(el) {
+        var $cs = $(el).closest('.' + CH_PREFIX + 'color-scheme');
         var $members = $cs.find('.' + CH_PREFIX + 'color-scheme_members');
 
         if ($cs.hasClass(CH_PREFIX + 'expanded')) {
@@ -668,6 +694,42 @@ function ColorHack() {
             $cs.find('.' + CH_PREFIX + 'color-scheme_toggle span').html('&#x25b6;');
         }*/
         $members.slideToggle(SLIDE_DURATION, function() {});
+    }
+
+    // Selects color scheme from input color scheme element.
+    var _SelectColorScheme = function(el) {
+        var $cs = $(el);
+
+        $cs.parent().find('.' + CH_PREFIX + 'color-scheme.' + CH_PREFIX + 'selected').removeClass(CH_PREFIX + 'selected');
+        $cs.addClass(CH_PREFIX + 'selected');
+    }
+
+    // Removes a color scheme from colorhack and the page by the index.
+    var _RemoveColorScheme = function(schemeId) {
+        // Remove from COLORHACK object.
+        for (var i = 0; i < COLORHACK.colorSchemes.length; i++) {
+            if (COLORHACK.colorSchemes[i].id === schemeId)
+                COLORHACK.colorSchemes.splice(i, 1);
+        }
+
+        // Remove from DOM.
+        COLORHACK.components['color-schemes_schemes'].find('#' + schemeId).remove();
+    }
+
+    // Removes a color scheme member element from colorhack and the page by index.
+    var _RemoveColorSchemeMember = function(schemeId, memberId) {
+        // Remove from COLORHACK object.
+        for (var i = 0; i < COLORHACK.colorSchemes.length; i++) {
+            if (COLORHACK.colorSchemes[i].id === schemeId) {
+                for (var j = 0; j < COLORHACK.colorSchemes[i].members.length; j++) {
+                    if (COLORHACK.colorSchemes[i].members[j].id === memberId)
+                        COLORHACK.colorSchemes[i].members.splice(j, 1);
+                }
+            }
+        }
+
+        // Remove from DOM
+        COLORHACK.components['color-schemes_schemes'].find('#' + schemeId).find('#' + memberId).remove();
     }
 
     // Fills a given color gradient for a color picker based on input colors.
@@ -924,10 +986,30 @@ function ColorHack() {
 
         /* COLOR SCHEMES DIALOG */
 
-        // Toggle slide on color scheme members list on click.
+        // Toggle slide on color scheme toggle icon click.
         this.components['color-schemes_schemes']
+            .on('click', '.' + CH_PREFIX + 'color-scheme_toggle', function (e) {
+                _ToggleColorScheme(this);
+            })
+
+        // Select active color scheme on color scheme click.
             .on('click', '.' + CH_PREFIX + 'color-scheme', function (e) {
                 _SelectColorScheme(this);
+            })
+
+        // Remove color scheme on minus icon click.
+            .on('click', '.' + CH_PREFIX + 'color-scheme > * > .' + CH_PREFIX + 'color-scheme_remove', function(e) {
+                var $this = $(this);
+                _RemoveColorScheme($this.closest('.' + CH_PREFIX + 'color-scheme').get(0).id);
+            })
+
+        // Remove color scheme member on minus icon click.
+            .on('click', '.' + CH_PREFIX + 'color-scheme_member .' + CH_PREFIX + 'color-scheme_remove', function(e) {
+                var $this = $(this);
+                _RemoveColorSchemeMember(
+                    $this.closest('.' + CH_PREFIX + 'color-scheme').get(0).id,
+                    $this.closest('.' + CH_PREFIX + 'color-scheme_member').get(0).id
+                );
             });
 
         /* COLOR SETTINGS DIALOG */
@@ -961,7 +1043,7 @@ function ColorHack() {
 
                     $gradient = $(e.target);
                     $selector = $($gradient.data('selector'));
-                    var xPos = e.pageX - _GetPos(e.target).x - 2; // 2 to account for selector width
+                    var xPos = e.pageX - _GetElPos(e.target).x - 2; // 2 to account for selector width
 
                     // Move selector to align with mouse by x (horizontal) position.
                     $selector.css('left', xPos);
@@ -1078,12 +1160,16 @@ function ColorHack() {
 
         // Set up default first color scheme
         this.colorSchemes.push({ // start with few elements for testing
-            name:       "Color Scheme 1",
+            id:             CH_PREFIX + 'scheme' + schemeCount,
+            name:           'Color Scheme ' + (schemeCount+1),
+            memberCount:    2, // change to 0
             //members:    [],
             members:    [
                 { name:     'head',
+                  id:       CH_PREFIX + 'scheme' + schemeCount + '_member0',
                   el:       $('head').get(0) },
                 { name:     'body',
+                  id:       CH_PREFIX + 'scheme0_member1',
                   el:       $('body').get(0) }
             ],
             colors:     [
@@ -1095,10 +1181,14 @@ function ColorHack() {
                   value:    { r: 0, g: 0, b: 0 } }
             ]
         });
+        schemeCount++;
         this.colorSchemes.push({
-            name:       "Color Scheme 2",
+            id:         CH_PREFIX + 'scheme1',
+            name:       'Color Scheme 2',
+            memberCount:    1, // change to 0
             members:    [
                 { name:     'body',
+                  id:       CH_PREFIX + 'scheme1_member0',
                   el:       $('body').get(0) }
             ],
             colors:     [
@@ -1110,10 +1200,14 @@ function ColorHack() {
                   value:    { r: 0, g: 0, b: 0 } }
             ]
         });
+        schemeCount++;
         this.colorSchemes.push({
-            name:       "Color Scheme 3",
+            id:         CH_PREFIX + 'scheme2',
+            name:       'Color Scheme 3',
+            memberCount:    1, // change to 0
             members:    [
                 { name:     'body',
+                  id:       CH_PREFIX + 'scheme2_member0',
                   el:       $('body').get(0) }
             ],
             colors:     [
@@ -1125,9 +1219,14 @@ function ColorHack() {
                   value:    { r: 0, g: 0, b: 0 } }
             ]
         });
+        schemeCount++;
         _UpdateColorSchemes();
-        // Automatically select the first color scheme.
-        _SelectColorScheme(this.components['color-schemes_schemes'].find('.' + CH_PREFIX + 'color-scheme:first-child').get(0));
+
+        // Automatically select and expand the first color scheme.
+        var firstScheme = this.components['color-schemes_schemes'].find('.' + CH_PREFIX + 'color-scheme:first-child').get(0)
+        _SelectColorScheme(firstScheme);
+        _ToggleColorScheme($(firstScheme).find('.' + CH_PREFIX + 'color-scheme_toggle').get(0));
+
     }
 
     // Sets up ColorHack on the page.
@@ -1493,7 +1592,7 @@ function LoadStylesheet() {
 
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme {',
             'padding:' +            '4px 8px;',
-            'cursor:' +             'pointer;',
+            //'cursor:' +             'pointer;',
 
             'border:' +             '1px solid rgb(80, 80, 80);',
 
@@ -1506,6 +1605,9 @@ function LoadStylesheet() {
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme:hover {',
             'border-color:' +       'rgb(160, 160, 160);',
+        '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme.' + CH_PREFIX + 'selected {',
+            'box-shadow:' +         '0 0 2px 1px rgb(200, 200, 200) inset;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme.' + CH_PREFIX + 'expanded {',
             'background:' +         '-ms-linear-gradient(top, rgb(90, 90, 90) 0%, rgb(110, 110, 110) 100%);',
@@ -1522,28 +1624,30 @@ function LoadStylesheet() {
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_name {',
             'margin:' +             '0 4px;',
+            'cursor:' +             'text;',
 
             'font-weight:' +        'normal;',
         '}',
 
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_toggle {',
-            'width:' +                  '12px;',
-            'position:' +               'relative;',
-            'top:' +                    '-1px;',
+            'width:' +              '12px;',
+            'position:' +           'relative;',
+            'top:' +                '-1px;',
+            'cursor:' +             'pointer;',
 
-            'background:' +             'rgba(0, 0, 0, 0);',
+            'background:' +         'rgba(0, 0, 0, 0);',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_toggle span {',
-            'font-size:' +              '10px;',
+            'font-size:' +          '10px;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_add, ',
-        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_delete {',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_remove {',
             'position:' +           'absolute;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_add {',
             'right:' +              '20px;',
         '}',
-        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_delete {',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_remove {',
             'right:' +              '0;',
         '}',
 
@@ -1556,16 +1660,21 @@ function LoadStylesheet() {
             'position:' +           'relative;',
             'padding:' +            '3px 2px;',
 
+            'cursor:' +             'default;',
+
             '-ms-transition:' +     'background 0s linear;',
             '-moz-transition:' +    'background 0s linear;',
             '-webkit-transition:' + 'background 0s linear;',
             '-o-transition:' +      'background 0s linear;',
             'transition:' +         'background 0s linear;',
         '}',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member .' + CH_PREFIX + 'color-scheme_member_name {',
+            'cursor:' +             'text;',
+        '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member .' + CH_PREFIX + 'color-scheme_add {',
             'right:' +              '22px;',
         '}',
-        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member .' + CH_PREFIX + 'color-scheme_delete {',
+        '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member .' + CH_PREFIX + 'color-scheme_remove {',
             'right:' +              '2px;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member:hover {',
