@@ -14,7 +14,7 @@ var CH_CLASS =                          'colorhack';        // HTML class to ide
 var BASE_Z_INDEX =                      9000;               // minimum z-index of ColorHack elements 
 
 var DIALOG_COLOR_SCHEMES_HEIGHT =       400;                // color-schemes dialog height
-var DIALOG_COLOR_SCHEMES_WIDTH =        200;                // color-schemes dialog width
+var DIALOG_COLOR_SCHEMES_WIDTH =        220;                // color-schemes dialog width
 var DIALOG_COLOR_SETTINGS_HEIGHT =      'auto';             // color-settings dialog height
 var DIALOG_COLOR_SETTINGS_WIDTH =       352;                // color-settings dialog width
 var DIALOG_COLORSCHEME_DETAILS_HEIGHT = 300;                // colorscheme-details dialog height
@@ -22,7 +22,8 @@ var DIALOG_COLORSCHEME_DETAILS_WIDTH =  300;                // colorscheme-detai
 
 var SLIDE_DURATION =                    300;                // time taken to complete slide animations
 
-var HIGHLIGHT_COLOR =                   'rgb(60, 100, 250)' // color used to highlight active elements
+var HIGHLIGHT_BORDER_COLOR =            'rgb(50, 200, 200)' // border color used to highlight elements in add member mode
+var HIGHLIGHT_BOX_SHADOW_COLOR =        'rgb(80, 120, 255)' // box shadow color used to highlight elements in add member mode
 
 /* Constants used by ColorHack */
 // Not safe to change.
@@ -75,6 +76,7 @@ function ColorHack() {
     var _HexToRgb =                 function() {}
 
     var _CreateDefaultColorScheme = function() {}
+    var _CreateColorSchemeMember =  function() {}
 
     var _AddColorSchemeMembers =    function() {}
     var _AddColorSchemes =          function() {}
@@ -215,7 +217,14 @@ function ColorHack() {
     var _isCtrlPressed = false;
 
     // Indicates whether we are adding an element to the active color scheme.
-    var _addMemberMode = false;
+    var _inAddMemberMode = false;
+    // Dialog element ID of the member whose add button was clicked to enter add member mode
+    // (used to determine where to add the new member).
+    var _addMemberModeOriginator = null;
+    // Dialog element ID of the color scheme we are adding a member to (while in add member mode).
+    var _addMemberModeSchemeId = null;
+    // Object to hold original element styling when temporarily changing them in add color scheme member mode.
+    var _originalStyling = {};
 
     // Dialogs that make up the main UI.
     // Used to generate the menu toolbar options.
@@ -487,12 +496,12 @@ function ColorHack() {
     // Contains all the color schemes tracked by ColorHack.
     // Each color scheme is an object of the following form:
     //  {
+    //      id:             string                              // id of color scheme element in color schemes dialog
     //      name:           string                              // arbitrary non-unique name given to color scheme
-    //      id:             string                              // id of color scheme element in DOM
     //      memberCount:    integer                             // similar purpose to schemeCount for COLORHACK object
     //      members:        [ {                                 // array of objects to keep track of elements belonging to color scheme
+    //              id:     string                                  // id of member element in color schemes dialog
     //              name:   string                                  // arbitrary non-unique name
-    //              id:     string                                  // id of el in DOM
     //              el:     element                                 // DOM element
     //          }, ... ]
     //      colors:         [ {                                 // array of objects describing color properties of color scheme
@@ -565,9 +574,21 @@ function ColorHack() {
         return cs;
     }
 
+    // Creates and returns an internal color scheme member object.
+    var _CreateColorSchemeMember = function(element, elementName, schemeIndex, scheme) {
+        var member = {
+            id:     CH_PREFIX + 'scheme' + schemeIndex + '_member' + scheme.memberCount,
+            name:   elementName,
+            el:     element
+        }
+        scheme.memberCount++;
+
+        return member;
+    }
+
     // Adds one or more members to the input color scheme.
     // Input color scheme is a JQ DOM element, members is an array of member objects.
-    var _AddColorSchemeMembers = function(scheme, members, afterTarget) {
+    var _AddColorSchemeMembers = function($scheme, members, afterTarget) {
         var $newMembers = $();
 
         var addColorSchemeMember = function(index) {
@@ -582,7 +603,11 @@ function ColorHack() {
                         'class':    CH_CLASS + ' ' +
                                     CH_PREFIX + 'color-scheme_member_name'
                     })
-                    .html(members[index].name)
+                    .html( // shorten displayed name if too long to fit
+                        members[index].name.length > 20 ?
+                        members[index].name.substring(0, 20) + '...' :
+                        members[index].name
+                    )
                 )
                 .append(
                     $('<span/>', {
@@ -611,7 +636,7 @@ function ColorHack() {
 
         // Add color scheme members to DOM.
         if (typeof afterTarget === 'undefined') {
-            scheme.find('.' + CH_PREFIX + 'color-scheme_members').append($newMembers);
+            $scheme.find('.' + CH_PREFIX + 'color-scheme_members').append($newMembers);
         } else {
             $newMembers.insertAfter(afterTarget);
         }
@@ -755,6 +780,7 @@ function ColorHack() {
 
     // Removes a color scheme member element from colorhack and the page by index.
     var _RemoveColorSchemeMember = function(schemeId, memberId) {
+        // TODO: Add placeholder "No elements assigned to color scheme" member to DOM if none exist (and also remove when adding new members)
         // Remove from COLORHACK object.
         for (var i = 0; i < COLORHACK.colorSchemes.length; i++) {
             if (COLORHACK.colorSchemes[i].id === schemeId) {
@@ -808,7 +834,7 @@ function ColorHack() {
     var _SetActiveColor = function(rgba) {
         var hue = 'rgba(' + rgba.red + ', ' + rgba.green + ', ' + rgba.blue + ', 1)';
         var color = 'rgba(' + rgba.red + ', ' + rgba.green + ', ' + rgba.blue + ', ' + rgba.alpha/100 + ')';
-
+http://www.youtube.com/watch?v=KHchLxioU08&feature=player_embedded
         // Update hex component colors.
         with ({ comps: COLORHACK.components['color-components'] }) {
             comps.red.css('background', 'rgba(' + rgba.red + ', 0, 0, 1)');
@@ -950,6 +976,107 @@ function ColorHack() {
             drag.target = null;
         })
 
+        $('body *').not('.' + CH_CLASS)
+            // TODO: Make this more robust. Doesn't work as well as element selectors yet in browser development tools yet.
+            // Highlight elements under mouse when selecting new member to add to color scheme.
+            .on('mouseover', function(e) { // preferable over mouseenter so that handle is triggered when hover moved to parent element.
+                if (!_inAddMemberMode)
+                    return;
+
+                if (_originalStyling.target) {
+                    // Restore original styling of previously hovered element.
+                    var $prevTarget = _originalStyling.target;
+                    $prevTarget.css('box-shadow', _originalStyling.boxShadow);
+                }
+
+                var $target = $(e.target);
+                // Save original styling of hovered element.
+                _originalStyling.target = $target;
+                _originalStyling.boxShadow = $target.css('box-shadow');
+
+                // Set new styling for hovered element.
+                $target.css('box-shadow', '0 0 2px 2px ' + HIGHLIGHT_BOX_SHADOW_COLOR);
+                // NOTE: There is an issue here where stylesheet box-shadow styling is overwritten.
+                // This can be averted by appending the new styling with ", ". However, it would then
+                // no longer work for elements that don't have box-shadow styling. Since I don't know
+                // of a good way to check stylesheet styling of an element (especially since most
+                // styles are inherited), I will leave this as is.
+            })
+
+            // Unhighlight a highlighted element under the mouse when adding color scheme memebers.
+            .on('mouseout', function(e) { // preferable over mouseleave for same reason as mouseover
+                if (!_inAddMemberMode)
+                    return;
+
+                if (_originalStyling.target) {
+                    // Restore original styling of hovered element.
+                    var $target = _originalStyling.target;
+                    $target.css('box-shadow', _originalStyling.boxShadow);
+
+                    _originalStyling.target = null;
+                }
+            })
+
+            // Add highlighted element when selecting new member to add to color scheme.
+            .on('click', function(e) {
+                if (!_inAddMemberMode)
+                    return;
+
+                var $target = $(e.target);
+                var $scheme = $target.closest('.' + CH_PREFIX + 'color-scheme');
+
+                if (_originalStyling.target) {
+                    // Restore original styling of previously hovered element.
+                    var $prevTarget = _originalStyling.target;
+                    $prevTarget.css('border-color', _originalStyling.borderColor);
+                    $prevTarget.css('box-shadow', _originalStyling.boxShadow);
+
+                    _originalStyling.target = null;
+                }
+
+                // Look for color scheme to add member to.
+                for (var i = 0; i < COLORHACK.colorSchemes.length; i++) {
+                    if (COLORHACK.colorSchemes[i].id === _addMemberModeSchemeId) {
+                        // Build default member name (can be changed by user later).
+                        // Default name has format:
+                        //      <tag_name>#<id>.<class1>.<class2>[...]
+                        var memberName = e.target.nodeName.toLowerCase();
+                        memberName +=
+                            (e.target.id ? ('#' + e.target.id) : '') +
+                            (e.target.className ?
+                                ((function(classes) {
+                                    var output = '';
+                                    var htmlClasses = classes.split(' ');
+                                    for (var i = 0; i < htmlClasses.length; i++) {
+                                        if (htmlClasses[i].length > 0) {
+                                            output += '.' + htmlClasses[i];
+                                        }
+                                    }
+                                    return output;
+                                })(e.target.className)) : '')
+                        ;
+
+                        var newMember = _CreateColorSchemeMember(
+                            e.target,
+                            memberName,
+                            i,
+                            COLORHACK.colorSchemes[i]
+                        );
+
+                        COLORHACK.colorSchemes[i].members.push(newMember);
+                        _AddColorSchemeMembers($('#' + _addMemberModeSchemeId), [newMember]);
+                        break;
+                    }
+                }
+
+                // Block default click behavior and switch to normal mode.
+                _inAddMemberMode = false;
+                _addMemberModeSchemeId = null;
+                if (e.preventDefault) e.preventDefault();
+                return false;
+            })
+        ;
+
         /* MENU */
 
         // Icon events
@@ -1037,19 +1164,31 @@ function ColorHack() {
                 _ToggleColorScheme(this);
             })
 
+            // Add color scheme on plus icon click.
+            .on('click', '.' + CH_PREFIX + 'color-scheme > * > .' + CH_PREFIX + 'color-scheme_add', function(e) {
+                var $cs = $(this).closest('.' + CH_PREFIX + 'color-scheme');
+                var newScheme = _CreateDefaultColorScheme();
+
+                // TODO: move the code for adding to internal color scheme array to _AddColorSchemes.
+                // Should do this after finished color schemes dialog (so we can remove the extra test color schemes on load).
+
+                COLORHACK.colorSchemes.push(newScheme);
+                _AddColorSchemes([newScheme], $cs);
+            })
+
             // Remove color scheme on minus icon click.
             .on('click', '.' + CH_PREFIX + 'color-scheme > * > .' + CH_PREFIX + 'color-scheme_remove', function(e) {
                 var $this = $(this);
                 _RemoveColorScheme($this.closest('.' + CH_PREFIX + 'color-scheme').get(0).id);
             })
 
-            // Add color scheme on plus icon click.
-            .on('click', '.' + CH_PREFIX + 'color-scheme > * > .' + CH_PREFIX + 'color-scheme_add', function(e) {
-                var $cs = $(this).closest('.' + CH_PREFIX + 'color-scheme');
-                var newScheme = _CreateDefaultColorScheme();
+            // Add color scheme member on plus icon click.
+            .on('click', '.' + CH_PREFIX + 'color-scheme_member .' + CH_PREFIX + 'color-scheme_add', function(e) {
+                var $this = $(this);
 
-                COLORHACK.colorSchemes.push(newScheme);
-                _AddColorSchemes([newScheme], $cs);
+                _inAddMemberMode = true;
+                _addMemberModeOriginator = this;
+                _addMemberModeSchemeId = $this.closest('.' + CH_PREFIX + 'color-scheme').get(0).id;
             })
 
             // Remove color scheme member on minus icon click.
@@ -1059,7 +1198,8 @@ function ColorHack() {
                     $this.closest('.' + CH_PREFIX + 'color-scheme').get(0).id,
                     $this.closest('.' + CH_PREFIX + 'color-scheme_member').get(0).id
                 );
-            });
+            })
+        ;
 
         /* COLOR SETTINGS DIALOG */
 
@@ -1726,6 +1866,8 @@ function LoadStylesheet() {
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member .' + CH_PREFIX + 'color-scheme_member_name {',
             'cursor:' +             'text;',
+
+            'letter-spacing:' +     '1px;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme_member .' + CH_PREFIX + 'color-scheme_add {',
             'right:' +              '22px;',
