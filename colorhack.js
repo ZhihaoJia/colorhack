@@ -74,6 +74,8 @@ function ColorHack() {
     var _RgbToHex =                 function() {}
     var _HexToRgb =                 function() {}
 
+    var _CreateDefaultColorScheme = function() {}
+
     var _AddColorSchemeMembers =    function() {}
     var _AddColorSchemes =          function() {}
     var _UpdateColorSchemes =       function() {}
@@ -542,9 +544,30 @@ function ColorHack() {
         } : null;
     }
 
+    // Creates and returns a default internal color scheme object.
+    var _CreateDefaultColorScheme = function() {
+        var cs = {
+            id:             CH_PREFIX + 'scheme' + schemeCount,
+            name:           'Color Scheme ' + (schemeCount+1),
+            memberCount:    0,
+            members:        [],
+            colors:     [
+                { type:     COLOR_TYPE_FOREGROUND,
+                  value:    { r: 0, g: 0, b: 0 } },
+                { type:     COLOR_TYPE_BACKGROUND,
+                  value:    { r: 255, g: 255, b: 255 } },
+                { type:     COLOR_TYPE_BORDER,
+                  value:    { r: 0, g: 0, b: 0 } }
+            ]
+        };
+        schemeCount++;
+
+        return cs;
+    }
+
     // Adds one or more members to the input color scheme.
     // Input color scheme is a JQ DOM element, members is an array of member objects.
-    var _AddColorSchemeMembers = function(scheme, members) {
+    var _AddColorSchemeMembers = function(scheme, members, afterTarget) {
         var $newMembers = $();
 
         var addColorSchemeMember = function(index) {
@@ -585,12 +608,18 @@ function ColorHack() {
         for (var i = 0; i < members.length; i++) {
             addColorSchemeMember(i);
         }
-        scheme.find('.' + CH_PREFIX + 'color-scheme_members').append($newMembers);
+
+        // Add color scheme members to DOM.
+        if (typeof afterTarget === 'undefined') {
+            scheme.find('.' + CH_PREFIX + 'color-scheme_members').append($newMembers);
+        } else {
+            $newMembers.insertAfter(afterTarget);
+        }
     }
 
     // Adds one or more color schemes to Color Schemes dialog.
     // Input color schemes is an array of color scheme objects.
-    var _AddColorSchemes = function(schemes) {
+    var _AddColorSchemes = function(schemes, afterTarget) {
         var $newSchemes = $();
 
         var addColorScheme = function(index) {
@@ -654,8 +683,14 @@ function ColorHack() {
         for (var i = 0; i < schemes.length; i++) {
             addColorScheme(i);
         }
-        COLORHACK.components['color-schemes'].find('#' + CH_PREFIX + 'color-schemes_schemes')
-            .append($newSchemes);
+
+        // Add color schemes to DOM.
+        if (typeof afterTarget === 'undefined') {
+            COLORHACK.components['color-schemes'].find('#' + CH_PREFIX + 'color-schemes_schemes')
+                .append($newSchemes);
+        } else {
+            $newSchemes.insertAfter(afterTarget);
+        }
     }
 
     // Updates Color Schemes dialog based on internal color schemes in ColorHack object.
@@ -708,8 +743,10 @@ function ColorHack() {
     var _RemoveColorScheme = function(schemeId) {
         // Remove from COLORHACK object.
         for (var i = 0; i < COLORHACK.colorSchemes.length; i++) {
-            if (COLORHACK.colorSchemes[i].id === schemeId)
+            if (COLORHACK.colorSchemes[i].id === schemeId) {
                 COLORHACK.colorSchemes.splice(i, 1);
+                break;
+            }
         }
 
         // Remove from DOM.
@@ -722,9 +759,12 @@ function ColorHack() {
         for (var i = 0; i < COLORHACK.colorSchemes.length; i++) {
             if (COLORHACK.colorSchemes[i].id === schemeId) {
                 for (var j = 0; j < COLORHACK.colorSchemes[i].members.length; j++) {
-                    if (COLORHACK.colorSchemes[i].members[j].id === memberId)
+                    if (COLORHACK.colorSchemes[i].members[j].id === memberId) {
                         COLORHACK.colorSchemes[i].members.splice(j, 1);
+                        break;
+                    }
                 }
+                break;
             }
         }
 
@@ -988,22 +1028,31 @@ function ColorHack() {
 
         // Toggle slide on color scheme toggle icon click.
         this.components['color-schemes_schemes']
-            .on('click', '.' + CH_PREFIX + 'color-scheme_toggle', function (e) {
-                _ToggleColorScheme(this);
-            })
-
-        // Select active color scheme on color scheme click.
+            // Select active color scheme on color scheme click.
             .on('click', '.' + CH_PREFIX + 'color-scheme', function (e) {
                 _SelectColorScheme(this);
             })
 
-        // Remove color scheme on minus icon click.
+            .on('click', '.' + CH_PREFIX + 'color-scheme_toggle', function (e) {
+                _ToggleColorScheme(this);
+            })
+
+            // Remove color scheme on minus icon click.
             .on('click', '.' + CH_PREFIX + 'color-scheme > * > .' + CH_PREFIX + 'color-scheme_remove', function(e) {
                 var $this = $(this);
                 _RemoveColorScheme($this.closest('.' + CH_PREFIX + 'color-scheme').get(0).id);
             })
 
-        // Remove color scheme member on minus icon click.
+            // Add color scheme on plus icon click.
+            .on('click', '.' + CH_PREFIX + 'color-scheme > * > .' + CH_PREFIX + 'color-scheme_add', function(e) {
+                var $cs = $(this).closest('.' + CH_PREFIX + 'color-scheme');
+                var newScheme = _CreateDefaultColorScheme();
+
+                COLORHACK.colorSchemes.push(newScheme);
+                _AddColorSchemes([newScheme], $cs);
+            })
+
+            // Remove color scheme member on minus icon click.
             .on('click', '.' + CH_PREFIX + 'color-scheme_member .' + CH_PREFIX + 'color-scheme_remove', function(e) {
                 var $this = $(this);
                 _RemoveColorSchemeMember(
@@ -1535,8 +1584,8 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header, ',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header, ',
         '#' + CH_PREFIX + 'colorscheme-details .' + CH_PREFIX + 'dialog-header {',
+            'height:' +             '22px;',
             'position:' +           'relative;',
-            'padding:' +            '4px 0;',
 
             'border-bottom:' +      '2px solid rgb(60, 60, 60);',
 
@@ -1549,6 +1598,7 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-title, ',
         '#' + CH_PREFIX + 'colorscheme-details .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-title {',
             'display:' +            'inline-block;',
+            'line-height:' +        '22px;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close, ',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close, ',
@@ -1556,12 +1606,13 @@ function LoadStylesheet() {
             'position:' +           'absolute;',
             'top:' +                '0;',
             'right:' +              '0;',
-            'padding:' +            '0 8px 4px 8px;',
+            'padding:' +            '0 8px;',
 
             'cursor:' +             'pointer;',
             'opacity:' +            '0.6;',
 
             'font-size:' +          '18px;',
+            'line-height:' +        '20px;',
         '}',
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close:hover, ',
         '#' + CH_PREFIX + 'color-settings .' + CH_PREFIX + 'dialog-header .' + CH_PREFIX + 'dialog-close:hover, ',
@@ -1588,6 +1639,11 @@ function LoadStylesheet() {
         '#' + CH_PREFIX + 'color-schemes {',
             'height:' +             DIALOG_COLOR_SCHEMES_HEIGHT + 'px;',
             'width:' +              DIALOG_COLOR_SCHEMES_WIDTH + 'px;',
+        '}',
+
+        '#' + CH_PREFIX + 'color-schemes #' + CH_PREFIX + 'color-schemes_schemes {',
+            'height:' +             (DIALOG_COLOR_SCHEMES_HEIGHT - 22 - 2) + 'px;', // dialog_h - header_h - header_border_w
+            'overflow:' +           'auto;',
         '}',
 
         '#' + CH_PREFIX + 'color-schemes .' + CH_PREFIX + 'color-scheme {',
